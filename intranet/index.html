@@ -1,0 +1,37 @@
+<html>
+<head>
+<link href='http://fonts.googleapis.com/css?family=VT323' rel='stylesheet' type='text/css'>
+<script type="text/javascript">
+	function displayError() {
+		
+		var val = window.location.toString().indexOf('=');
+		//window.location.toString().substr(window.location.toString().indexOf('=') + 1);
+		
+		if (val != -1) {
+			document.getElementById('err').innerHTML = 'Incorrect password.';
+		}
+	}
+	function logIn(password) {
+		document.forms[0].action = "guardian.html?pw=" + password;
+		return true;
+	}
+</script>
+</head>
+<body onLoad="displayError();">
+<center>
+	<form method="post" onSubmit="logIn(this.pass.value);">
+	<img src="img/logo.png"><br />
+
+	<h1>Intranet</h1>
+
+	<!--Username: <input type="input"><br /-->
+	Password: <input type="password" name="password" id="pass"><br />
+	<input type="submit" value="Log-In">
+	<br />
+	<br />
+	<div id='err'></div>
+
+	</form>
+</center>
+</body>
+</html>
