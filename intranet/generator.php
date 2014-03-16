@@ -132,7 +132,8 @@
 						* ($this->cost_per_lamp_replace + $this->cost_per_lamp + $this->cost_disposal)
 				)
 				+ (
-					($this->ballast_life_hours == 0 ? 0 : ($this->hylite->lamp_life_rated / $this->ballast_life_hours))
+					// ** Just like above, we've rounded down the lamp life rated / ballast life hours calculation
+					($this->ballast_life_hours == 0 ? 0 : floor($this->hylite->lamp_life_rated / $this->ballast_life_hours))
 					* ($this->ballast_num_per_lum * $this->num_fixtures) 
 					* ($this->ballast_cost_per_replace + $this->ballast_replacement_cost)
 				);
@@ -376,7 +377,8 @@
 			$this->pdf->Image($file, $x, $y, 0, $h);
 		}		
 		
-*/		function Write_Debug() {
+*/		
+		function Write_Debug() {
 			$this->Set_FontAndColor('Helvetica', 6, 0, 0, 0);
 			for($x = 0; $x < 6.5; $x += 0.5)
 			{
@@ -501,22 +503,22 @@
 				$total_num_lights += $current->num_fixtures * $current->lamps_per_fixture;
 				
 				$this->Set_FontColor(255, 0, 0);
-				$this->Cell_RightText(0.90, $height, '$' . number_format($current->annualCost));
+				$this->Cell_RightText(0.90, $height, '$' . number_format($current->annualCost, 2));
 				$total_current_annualCost += $current->annualCost;
-				$this->Cell_RightText(0.78, $height, '$' . number_format($current->lifetimeCost));
+				$this->Cell_RightText(0.78, $height, '$' . number_format($current->lifetimeCost, 2));
 				$total_current_lifetimeCost += $current->lifetimeCost;
 
 				$this->Set_FontColor(109, 193, 15);
-				$this->Cell_RightText(0.75, $height, '$' . number_format($hylite->annualCost));
+				$this->Cell_RightText(0.75, $height, '$' . number_format($hylite->annualCost, 2));
 				$total_hylite_annualCost += $hylite->annualCost;
-				$this->Cell_RightText(0.90, $height, '$' . number_format($hylite->lifetimeCost));
+				$this->Cell_RightText(0.90, $height, '$' . number_format($hylite->lifetimeCost, 2));
 				$total_hylite_lifetimeCost += $hylite->lifetimeCost;
-				$this->Cell_RightText(0.80, $height, '$' . number_format($hylite->initial_investment));
+				$this->Cell_RightText(0.80, $height, '$' . number_format($hylite->initial_investment, 2));
 				$total_initial_investment += $hylite->initial_investment;
 				$this->Cell_RightText(0.65, $height, number_format($hylite->total_roi) . '%');
-				$total_total_roi += $hylite->total_roi;
+				//$total_total_roi += $hylite->total_roi;
 				$this->Cell_RightText(0.78, $height, $hylite->payback_months);
-				$total_payback_months += $hylite->payback_months;
+				//$total_payback_months += $hylite->payback_months;
 				
 				$total_co2_offset += $hylite->co2_offset;
 				$total_miles += $hylite->miles;
@@ -526,7 +528,8 @@
 				$total_local_rebates += $current->rebates_state;
 				$total_federal_rebates += $current->rebates_federal;
 
-				$total_initial_investment -= ($current->rebates_utilities + $current->rebates_state + $current->rebates_federal);
+				// Rebates are no longer subtracted
+				//$total_initial_investment -= ($current->rebates_utilities + $current->rebates_state + $current->rebates_federal);
 
 				$this->Next_Row($i, $height);
 			}
@@ -538,26 +541,33 @@
 			$this->Cell_RightText(0.47, $height, $total_num_lights);
 			
 			$this->Set_FontColor(255, 0, 0);
-			$this->Cell_RightText(0.90, $height, '$' . number_format($total_current_annualCost));
-			$this->Cell_RightText(0.78, $height, '$' . number_format($total_current_lifetimeCost));
+			$this->Cell_RightText(0.90, $height, '$' . number_format($total_current_annualCost, 2));
+			$this->Cell_RightText(0.78, $height, '$' . number_format($total_current_lifetimeCost, 2));
 			
 			$this->Set_FontColor(109, 193, 15);
-			$this->Cell_RightText(0.75, $height, '$' . number_format($total_hylite_annualCost));
-			$this->Cell_RightText(0.90, $height, '$' . number_format($total_hylite_lifetimeCost));
-			$this->Cell_RightText(0.80, $height, '$' . number_format($total_initial_investment));
+			$this->Cell_RightText(0.75, $height, '$' . number_format($total_hylite_annualCost, 2));
+			$this->Cell_RightText(0.90, $height, '$' . number_format($total_hylite_lifetimeCost, 2));
+			$this->Cell_RightText(0.80, $height, '$' . number_format($total_initial_investment, 2));
+
+			// now subtract the rebates
+			$total_initial_investment -= ($total_utility_rebates + $total_local_rebates + $total_federal_rebates);
+
+			$total_total_roi = ((($total_current_lifetimeCost - $total_hylite_lifetimeCost) - $total_initial_investment) / $total_initial_investment) * 100;
 			$this->Cell_RightText(0.65, $height, number_format($total_total_roi) . '%');
+			$total_payback_months = ($total_initial_investment / ($total_current_annualCost - $total_hylite_annualCost)) * 12;
 			$this->Cell_RightText(0.78, $height, number_format($total_payback_months));
 
 			// print utility rebates, local & state incentives, federal incentives and net investment
 			$this->Start_Table(4.95, 6.72);
 			$this->Set_FontColor(109, 193, 15);
-			$this->Cell_DownText(0.80, $height, '$' . number_format($total_utility_rebates));
+			$this->Cell_DownText(0.80, $height, '$' . number_format($total_utility_rebates, 2));
 			//$this->Next_Row(1, $height);
-			$this->Cell_DownText(0.80, $height, '$' . number_format($total_local_rebates));
+			$this->Cell_DownText(0.80, $height, '$' . number_format($total_local_rebates, 2));
 			//$this->Next_Row(2, $height);
-			$this->Cell_DownText(0.80, $height, '$' . number_format($total_federal_rebates));
+			$this->Cell_DownText(0.80, $height, '$' . number_format($total_federal_rebates, 2));
 			//$this->Next_Row(3, $height);
-			$this->Cell_DownText(0.80, $height, '$' . number_format($total_utility_rebates + $total_local_rebates + $total_federal_rebates));
+			$this->Cell_DownText(0.80, $height, '$' . number_format($total_initial_investment, 2));
+			//$this->Cell_DownText(0.80, $height, '$' . number_format($total_utility_rebates + $total_local_rebates + $total_federal_rebates));
 			
 			// environmental impact
 			$width = 0.65;
@@ -572,16 +582,16 @@
 			$height = 0.18;
 			$this->Start_Table(4.65, 8.10);
 			$this->Set_FontAndColor('Helvetica', 8, 109, 193, 15);
-			$this->Cell_DownText($width, $height, '$' . number_format($total_current_annualCost - $total_hylite_annualCost));
-			$this->Cell_DownText($width, $height, '$' . number_format($total_current_lifetimeCost - $total_hylite_lifetimeCost));
+			$this->Cell_DownText($width, $height, '$' . number_format($total_current_annualCost - $total_hylite_annualCost, 2));
+			$this->Cell_DownText($width, $height, '$' . number_format($total_current_lifetimeCost - $total_hylite_lifetimeCost, 2));
 			$this->Cell_DownText($width, $height, number_format($total_total_roi) . '%');
 			$this->Cell_DownText($width, $height, number_format($total_payback_months));
-			$this->Cell_DownText($width, $height, '$' . number_format(round($total_current_annualCost - $total_hylite_annualCost / 365, 2)));
+			$this->Cell_DownText($width, $height, '$' . number_format(round($total_current_annualCost - $total_hylite_annualCost / 365, 2), 2));
 			
 			// net investment
 			$this->Start_Table(5.70, 8.10);
 			$this->Set_FontAndColor('Helvetica', 18, 109, 193, 15);
-			$this->Cell_DownText(1.50, 0.55, '$' . number_format($total_initial_investment));
+			$this->Cell_DownText(1.50, 0.55, '$' . number_format($total_initial_investment, 2));
 		}
 		
 		function Page_Sections() {
@@ -999,6 +1009,7 @@
 				//$this->NextLine_WriteText('Labor and Equipment Cost per Ballast Rep: $'	. $current->ballast_replacement_cost);
 				$this->NextLine_WriteText('Cost to Replace Ballast: $' . $current->ballast_replacement_cost);
 						//$current->ballast_cost_per_replace);
+				$this->NextLine_WriteText('');
 			}
 
 			$this->fData->use_sectionData = false;

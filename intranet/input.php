@@ -285,13 +285,21 @@ function displayKeywords() {
 	}
 }
 
+function validate_input() {
+	if (Number(output('section_operatingHours')) > 8760)
+		document.getElementById("error_message").innerHTML = "Error: Operating Years Must Less Than 8,760!";
+	else
+		document.getElementById("error_message").innterHTML = "";
+}
+
 </script>
 </head>
 <body onload="generate_sections();">
-<input type="button" onclick="demo();" value="Demo">
-<input type="button" onclick="element('data').reset();" value="Reset">
+
+<!--input type="button" onclick="element('data').reset();" value="Reset"-->
 <form name="data" method="post" action="generator.php" target="_blank">
-<table border="1">
+
+<table border="1" style="margin-left:auto;margin-right:auto;">
 <tr>
 	<td>
 		<b>Prepared for</b><br />
@@ -359,7 +367,8 @@ function displayKeywords() {
 		<u>General Information</u><br />
 		Section Name: <input type="text" name="section_name" onkeyup="save_section(); generate_dropdown();"/><br />
 		Electricity Rate ($/kWh): <input type="text" name="section_electricityRate" /><br />
-		Operating Hours per Year: <input type="text" name="section_operatingHours" /><br />
+		Operating Hours per Year: <input type="text" name="section_operatingHours" onblur="validate_input();"; /><br />
+		<div id="error_message" style="color:rgb(255, 0, 0);text-transform:bold;"></div>
 		<br />
 		<u>Current Fixture Data</u><br />
 		Current Fixture Type: <input type="text" name="section_current_fixture" /><br />
@@ -419,6 +428,8 @@ function displayKeywords() {
 </tr>
 </table>
 <input type="submit" value="Generate PDF" onclick="save_section();" />
+<br />
+<input type="button" onclick="demo();" value="Demo">
 </form>
 <!-- input type="button" onclick="displayKeywords()" value="Get Form Keywords"><br />
 <textarea id="keywords" rows="4" cols="100"></textarea-->
