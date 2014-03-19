@@ -104,18 +104,40 @@
 			$this->lamps_per_fixture = $a->data_int('section_current_lampsPerFixture');
 			$this->lWatts = $a->data_int('section_current_lWatts');
 			
-			$this->cost_per_lamp_replace = $a->data_int('section_maint_costPerBulbReplace');
-			$this->cost_per_lamp = $a->data_int('section_maint_costPerBulb');
-			$this->cost_disposal = $a->data_int('section_maint_disposalCost');
+			if($this->include_maint) {
+				$this->cost_per_lamp_replace = $a->data_int('section_maint_costPerBulbReplace');
+				$this->cost_per_lamp = $a->data_int('section_maint_costPerBulb');
+				$this->cost_disposal = $a->data_int('section_maint_disposalCost');
+			}
+			else {
+				$this->cost_per_lamp_replace = 0;
+				$this->cost_per_lamp = 0;
+				$this->cost_disposal = 0;
+			}
 			
-			$this->ballast_cost_per_replace = $a->data_int('section_maint_costPerBallastReplace');
-			$this->ballast_life_hours = $a->data_int('section_maint_ballast_lifeHours');
-			$this->ballast_replacement_cost = $a->data_int('section_maint_ballast_replacementCost');
-			$this->ballast_num_per_lum = $a->data_int('section_maint_ballast_numPerLum');
+			if($this->include_maint_ballast) {
+				$this->ballast_cost_per_replace = 0; //$a->data_int('section_maint_costPerBallastReplace');
+				$this->ballast_life_hours = $a->data_int('section_maint_ballast_lifeHours');
+				$this->ballast_replacement_cost = $a->data_int('section_maint_ballast_replacementCost');
+				$this->ballast_num_per_lum = $a->data_int('section_maint_ballast_numPerLum');				
+			}
+			else {
+				$this->ballast_cost_per_replace = 0;
+				$this->ballast_life_hours = 0;
+				$this->ballast_replacement_cost = 0;
+				$this->ballast_num_per_lum = 0;
+			}
 			
-			$this->rebates_utilities = $a->data_int('section_rebInc_utility');
-			$this->rebates_state = $a->data_int('section_rebInc_localState');
-			$this->rebates_federal = $a->data_int('section_rebInc_federal');
+			if ($this->include_rebInc) {
+				$this->rebates_utilities = $a->data_int('section_rebInc_utility');
+				$this->rebates_state = $a->data_int('section_rebInc_localState');
+				$this->rebates_federal = $a->data_int('section_rebInc_federal');
+			}
+			else {
+				$this->rebates_utilities = 0;
+				$this->rebates_state = 0;
+				$this->rebates_federal = 0;
+			}
 			
 			$this->yearsOfOperation = round($this->lamp_life / $this->operating_hours, 1);
 			$this->annualUsageKwh = ($this->lWatts * $this->num_fixtures * $this->operating_hours) / 1000;
@@ -123,20 +145,25 @@
 			
 			$this->lifetimeUsageKwh = ($this->lWatts * $this->num_fixtures * $this->hylite->lamp_life_rated) / 1000;
 			$this->lifetimeElectricityCost = $this->lifetimeUsageKwh * $this->electricity_rate;
-			$this->lifetimeMaintCost = 
-				(
+			if ($current->include_maint == 0) {
+				$this->lifetimeMaintCost = 0;
+			}
+			else {
+				$this->lifetimeMaintCost = 
 					(
-						floor($this->hylite->lamp_life_rated / $this->lamp_life) // ** ROUNDED DOWN **
-						* $this->lamps_per_fixture * $this->num_fixtures
-					) 
-						* ($this->cost_per_lamp_replace + $this->cost_per_lamp + $this->cost_disposal)
-				)
-				+ (
-					// ** Just like above, we've rounded down the lamp life rated / ballast life hours calculation
-					($this->ballast_life_hours == 0 ? 0 : floor($this->hylite->lamp_life_rated / $this->ballast_life_hours))
-					* ($this->ballast_num_per_lum * $this->num_fixtures) 
-					* ($this->ballast_cost_per_replace + $this->ballast_replacement_cost)
-				);
+						(
+							floor($this->hylite->lamp_life_rated / $this->lamp_life) // ** ROUNDED DOWN **
+							* $this->lamps_per_fixture * $this->num_fixtures
+						) 
+							* ($this->cost_per_lamp_replace + $this->cost_per_lamp + $this->cost_disposal)
+					)
+					+ (
+						// ** Just like above, we've rounded down the lamp life rated / ballast life hours calculation
+						($this->ballast_life_hours == 0 ? 0 : floor($this->hylite->lamp_life_rated / $this->ballast_life_hours))
+						* ($this->ballast_num_per_lum * $this->num_fixtures) * ( /*$this->ballast_cost_per_replace +*/ $this->ballast_replacement_cost)
+					);
+			}
+
 		}
 		
 		function Load_Hylite() {
@@ -206,7 +233,7 @@
 			
 			$this->num_fixtures = $a->data_int('section_hylite_numFixtures');
 			$this->lamps_per_fixture = $a->data_int('section_hylite_lampsPerFixture');
-			$this->price = $a->data_int('section_hylite_unitPrice');
+			$this->price = $a->data_float('section_hylite_unitPrice');
 			
 			$this->initial_investment = ($this->price * $this->num_fixtures * $this->lamps_per_fixture); 
 
@@ -427,7 +454,7 @@
 			$height = 0.21;
 			
 			// print section information
-			$this->Start_Table(0.43, 3.04);
+			$this->Start_Table(0.07, 3.04);
 			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0);
 			$this->fData->use_sectionData = true;
 			for ($i = 1; $i <= $this->num_sections; $i++)
@@ -443,29 +470,29 @@
 				$hylite->Load_Savings();
 			
 				$this->Set_FontColor(0, 0, 0);
-				$this->Cell_Right(0.72, $height, 'section_name');
-				$this->Cell_RightText(0.47, $height, $current->num_fixtures * $current->lamps_per_fixture);
+				$this->Cell_Right(0.78, $height, 'section_name');
+				$this->Cell_RightText(0.52, $height, $current->num_fixtures * $current->lamps_per_fixture);
 				
 				$this->Set_FontColor(255, 0, 0);
-				$this->Cell_RightText(0.90, $height, $current->lamp);
-				$this->Cell_RightText(0.78, $height, number_format($current->watts) . 'W');
-				$this->Cell_RightText(0.75, $height, number_format($current->lamp_life));
+				$this->Cell_RightText(0.97, $height, $current->lamp);
+				$this->Cell_RightText(0.86, $height, number_format($current->watts) . 'W');
+				$this->Cell_RightText(0.81, $height, number_format($current->lamp_life));
 				
 				$this->Set_FontColor(109, 193, 15);
-				$this->Cell_RightText(0.90, $height, $hylite->series);
-				$this->Cell_RightText(0.78, $height, number_format($hylite->watts) . 'W');				
-				$this->Cell_RightText(0.65, $height, number_format($hylite->lamp_life_rated));
+				$this->Cell_RightText(0.97, $height, $hylite->series);
+				$this->Cell_RightText(0.87, $height, number_format($hylite->watts) . 'W');				
+				$this->Cell_RightText(0.72, $height, number_format($hylite->lamp_life_rated));
 				
 				//(Current annual kWh – HyLite annual kWh)/(Current annual kWh)
 				$energy_savings = ($current->annualUsageKwh - $hylite->annualUsageKwh) / $current->annualUsageKwh;
 				$energy_savings = round($energy_savings * 100, 0);
 
-				$this->Cell_RightText(0.78, $height, $energy_savings . '%');
+				$this->Cell_RightText(0.84, $height, $energy_savings . '%');
 				
 				$this->Next_Row($i, $height);
 			}
 			
-			$this->Start_Table(0.43, 5.06);
+			$this->Start_Table(0.07, 5.06);
 			// print financial information
 
 			$total_num_lights = 0;
@@ -498,26 +525,26 @@
 				$hylite->Load_Savings();
 			
 				$this->Set_FontColor(0, 0, 0);
-				$this->Cell_Right(0.72, $height, 'section_name');
-				$this->Cell_RightText(0.47, $height, $current->num_fixtures * $current->lamps_per_fixture);
+				$this->Cell_Right(0.78, $height, 'section_name');
+				$this->Cell_RightText(0.51, $height, $current->num_fixtures * $current->lamps_per_fixture);
 				$total_num_lights += $current->num_fixtures * $current->lamps_per_fixture;
 				
 				$this->Set_FontColor(255, 0, 0);
-				$this->Cell_RightText(0.90, $height, '$' . number_format($current->annualCost, 2));
+				$this->Cell_RightText(0.97, $height, '$' . number_format($current->annualCost, 2));
 				$total_current_annualCost += $current->annualCost;
-				$this->Cell_RightText(0.78, $height, '$' . number_format($current->lifetimeCost, 2));
+				$this->Cell_RightText(0.86, $height, '$' . number_format($current->lifetimeCost, 2));
 				$total_current_lifetimeCost += $current->lifetimeCost;
 
 				$this->Set_FontColor(109, 193, 15);
-				$this->Cell_RightText(0.75, $height, '$' . number_format($hylite->annualCost, 2));
+				$this->Cell_RightText(0.81, $height, '$' . number_format($hylite->annualCost, 2));
 				$total_hylite_annualCost += $hylite->annualCost;
-				$this->Cell_RightText(0.90, $height, '$' . number_format($hylite->lifetimeCost, 2));
+				$this->Cell_RightText(0.97, $height, '$' . number_format($hylite->lifetimeCost, 2));
 				$total_hylite_lifetimeCost += $hylite->lifetimeCost;
-				$this->Cell_RightText(0.80, $height, '$' . number_format($hylite->initial_investment, 2));
+				$this->Cell_RightText(0.88, $height, '$' . number_format($hylite->initial_investment, 2));
 				$total_initial_investment += $hylite->initial_investment;
-				$this->Cell_RightText(0.65, $height, number_format($hylite->total_roi) . '%');
+				$this->Cell_RightText(0.72, $height, number_format($hylite->total_roi) . '%');
 				//$total_total_roi += $hylite->total_roi;
-				$this->Cell_RightText(0.78, $height, $hylite->payback_months);
+				$this->Cell_RightText(0.84, $height, $hylite->payback_months);
 				//$total_payback_months += $hylite->payback_months;
 				
 				$total_co2_offset += $hylite->co2_offset;
@@ -537,25 +564,25 @@
 			
 			// print summary line
 			$this->Set_FontColor(0, 0, 0);
-			$this->Cell_Right(0.72, $height, '');
-			$this->Cell_RightText(0.47, $height, $total_num_lights);
+			$this->Cell_Right(0.78, $height, '');
+			$this->Cell_RightText(0.51, $height, $total_num_lights);
 			
 			$this->Set_FontColor(255, 0, 0);
-			$this->Cell_RightText(0.90, $height, '$' . number_format($total_current_annualCost, 2));
-			$this->Cell_RightText(0.78, $height, '$' . number_format($total_current_lifetimeCost, 2));
+			$this->Cell_RightText(0.97, $height, '$' . number_format($total_current_annualCost, 2));
+			$this->Cell_RightText(0.86, $height, '$' . number_format($total_current_lifetimeCost, 2));
 			
 			$this->Set_FontColor(109, 193, 15);
-			$this->Cell_RightText(0.75, $height, '$' . number_format($total_hylite_annualCost, 2));
-			$this->Cell_RightText(0.90, $height, '$' . number_format($total_hylite_lifetimeCost, 2));
-			$this->Cell_RightText(0.80, $height, '$' . number_format($total_initial_investment, 2));
+			$this->Cell_RightText(0.81, $height, '$' . number_format($total_hylite_annualCost, 2));
+			$this->Cell_RightText(0.97, $height, '$' . number_format($total_hylite_lifetimeCost, 2));
+			$this->Cell_RightText(0.88, $height, '$' . number_format($total_initial_investment, 2));
 
 			// now subtract the rebates
 			$total_initial_investment -= ($total_utility_rebates + $total_local_rebates + $total_federal_rebates);
 
 			$total_total_roi = ((($total_current_lifetimeCost - $total_hylite_lifetimeCost) - $total_initial_investment) / $total_initial_investment) * 100;
-			$this->Cell_RightText(0.65, $height, number_format($total_total_roi) . '%');
+			$this->Cell_RightText(0.72, $height, number_format($total_total_roi) . '%');
 			$total_payback_months = ($total_initial_investment / ($total_current_annualCost - $total_hylite_annualCost)) * 12;
-			$this->Cell_RightText(0.78, $height, number_format($total_payback_months));
+			$this->Cell_RightText(0.84, $height, number_format($total_payback_months));
 
 			// print utility rebates, local & state incentives, federal incentives and net investment
 			$this->Start_Table(4.95, 6.72);
@@ -586,7 +613,8 @@
 			$this->Cell_DownText($width, $height, '$' . number_format($total_current_lifetimeCost - $total_hylite_lifetimeCost, 2));
 			$this->Cell_DownText($width, $height, number_format($total_total_roi) . '%');
 			$this->Cell_DownText($width, $height, number_format($total_payback_months));
-			$this->Cell_DownText($width, $height, '$' . number_format(round($total_current_annualCost - $total_hylite_annualCost / 365, 2), 2));
+			$this->Cell_DownText($width, $height, '$' . number_format(($total_current_annualCost - $total_hylite_annualCost) / 365, 2));			
+			//$this->Cell_DownText($width, $height, '$' . number_format(round($total_current_annualCost - $total_hylite_annualCost / 365, 2), 2));
 			
 			// net investment
 			$this->Start_Table(5.70, 8.10);
@@ -613,91 +641,68 @@
 			$current->Load_Hylite();
 			$hylite->Load_Savings();
 			
-			if ($current->include_rebInc == true) {
+			if ($current->include_rebInc) {
 				$this->NewPage('pdf/05_section_investment.pdf');
 			}
 			else {
 				$this->NewPage('pdf/05_section.pdf');
 			}
-			
-			/*
 
-				Need to fit image into a 110x126 box (1.10w x 1.25h)
-				But, really, we want to fit the image into a 1.00x1.15 shape
+			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
+			$this->Move_Write(0, 0, '');
+			$this->NextLine_WriteText($current->include_rebInc);
+			$this->NextLine_WriteText($current->include_maint);
+			$this->NextLine_WriteText($current->include_maint_ballast);
 
-				wide = (width > length ? true : false);
-				long = !wide;
-				ratio = width / length;
+			//Need to fit image into a 110x126 box (1.10w x 1.25h)
+			//But, really, we want to fit the image into a 1.00x1.15 shape
 
-				if (wide)
-					// set width = 1.00
-					// set height = height * (100 / orig_width)
-					// set x = 6.25
-					// set y = 2.75 + (115 - height / 2)
-
-				if (long)
-					// set height = 1.15
-					// set width = width * (115 / orig_height);
-					// set x = 6.25 + (110 - width / 2)
-					// set y = 2.75
-				
-
-			example
-				w = 442
-				h = 450
-
-				is long
-				h = 115 (before was 450, so .255)
-				w = (before was 442,  .255)
-
-			*/
-
-			$this->Set_FontAndColor('Helvetica', 12, 255, 0, 0);
-			$this->Move_WriteText(0, 0.2, '');
+			//$this->Set_FontAndColor('Helvetica', 12, 255, 0, 0);
+			//$this->Move_WriteText(0, 0.2, '');
 
 			$size = getimagesize($hylite->pic_url());
-				//getimagesize('img/test.png');
-				//getimagesize(str_replace(' ', '%20', $hylite->pic_url()));
 			$orig_width = $size[0];
 			$orig_height = $size[1];
-			$x = 6.25;
-			$y = 2.44;
+			$x = 6.18;
+			$y = 2.40;
+			$desired_w = 1.18;
+			$desired_h = 1.35;
 			$width = 1.00;
 			$height = 1.00;
-			$ratio = 1.00;
 			$wide = ($orig_width > $orig_height ? true : false);
 			$long = !$wide;
 			if ($wide) {
-				//$this->NextLine_WriteText('is wide');
 				$width = 1.00;
-				//$ratio = $orig_height / $orig_width;
-				$height = ($orig_height * (100 / $orig_width)) / 100;
-				$y += (1.15 - $height) / 2;
+				$height = ($orig_height * (($desired_w * 100) / $orig_width)) / 100;
+				$y += ($desired_h - $height) / 2;
+				$x += 0.05;
 			}
 			else if ($long) {
-				//$this->NextLine_WriteText('is long');
-				$height = 1.15;
-				$ratio = $orig_width / $orig_height;
-				$width = ($orig_width * (115 / $orig_height)) / 100;
-				//$x += (1.10 - $width / 2);
+				$height = $desired_h;
+				$width = ($orig_width * (($desired_h * 100) / $orig_height)) / 100;
+				$x += ($desired_w - $width) / 2;
 			}
 
-/*
-			$this->NextLine_WriteText('ow: ' . $orig_width);
-			$this->NextLine_WriteText('oh: ' . $orig_height);
-			$this->NextLine_WriteText('x: ' . $x);
-			$this->NextLine_WriteText('y: ' . $y);
-			$this->NextLine_WriteText('w: ' . $width);
-			$this->NextLine_WriteText('h: ' .$height);
-			$this->NextLine_WriteText('wide: ' . $wide);
-			$this->NextLine_WriteText('long: ' . $long);
-*/			
+			//$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
+			//$this->Start_Table(6.18, 2.40);
+			//$this->Cell_RightText(1.18, 1.35, "TEST1");
+			//$this->Cell_RightText(1.18, 1.35, "TEST2");
+
+			// $this->NextLine_WriteText('ow: ' . $orig_width);
+			// $this->NextLine_WriteText('oh: ' . $orig_height);
+			//$this->NextLine_WriteText('x: ' . $x);
+			//$this->NextLine_WriteText('y: ' . $y);
+			// $this->NextLine_WriteText('w: ' . $width);
+			// $this->NextLine_WriteText('h: ' .$height);
+			// $this->NextLine_WriteText('wide: ' . $wide);
+			// $this->NextLine_WriteText('long: ' . $long);
+		
 			$this->Image($hylite->pic_url(), $x, $y, $width, $height);
 
 			// write text
 			$this->Set_FontAndColor('Helvetica', 18, 51, 102, 255);
 			$this->Move_WriteText(5.45, 0.80, 'Section ' . $this->fData->current_section);
-			
+
 			$this->Set_FontAndColor('Helvetica', 16, 51, 102, 255);
 			$this->Move_Write(0.50, 1.50, 'section_name');
 			//$this->Start_Table(0.50, 1.25);
@@ -725,21 +730,21 @@
 			// annual cost of ownership
 			$this->Start_Table($left, 3.60);
 			$this->Cell_DownText($width, $height, number_format($current->annualUsageKwh));
-			$this->Cell_DownText($width, $height, '$' . number_format($current->annualElectricityCost));
-			$this->Cell_DownText($width, $height, '$' . number_format($current->annualMaintCost));
+			$this->Cell_DownText($width, $height, '$' . number_format($current->annualElectricityCost, 2));
+			$this->Cell_DownText($width, $height, '$' . number_format($current->annualMaintCost, 2));
 			//$current_annualCost = $current->annualElectricityCost + $current->annualMaintCost;
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0, 'B');
-			$this->Cell_DownText($width, $height, '$' . number_format($current->annualCost));
+			$this->Cell_DownText($width, $height, '$' . number_format($current->annualCost, 2));
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
 			
 			// total cost of ownership
 			$this->Start_Table($left, 4.75);
-			$this->Cell_DownText($width, $height, number_format($current->lifetimeUsageKwh));
-			$this->Cell_DownText($width, $height, '$' . number_format($current->lifetimeElectricityCost));
-			$this->Cell_DownText($width, $height += 0.03, '$' . number_format($current->lifetimeMaintCost));
+			$this->Cell_DownText($width, $height, number_format($current->lifetimeUsageKwh, 2));
+			$this->Cell_DownText($width, $height, '$' . number_format($current->lifetimeElectricityCost, 2));
+			$this->Cell_DownText($width, $height += 0.03, '$' . number_format($current->lifetimeMaintCost, 2));
 			//$current_lifetimeCost = $current_lifetimeElectricityCost + $current_lifetimeMaintCost;
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0, 'B');
-			$this->Cell_DownText($width, $height, '$' . number_format($current->lifetimeCost));
+			$this->Cell_DownText($width, $height, '$' . number_format($current->lifetimeCost, 2));
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
 
 			// write hylite information
@@ -764,21 +769,21 @@
 			// annual cost of ownership
 			$this->Start_Table($left, 3.60);
 			$this->Cell_DownText($width, $height, number_format($hylite->annualUsageKwh));
-			$this->Cell_DownText($width, $height, '$' . number_format($hylite->annualElectricityCost));
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->annualElectricityCost, 2));
 			$this->Cell_DownText($width, $height, '$0');
 			//$hylite_annualCost = $hylite_annualElectricityCost;
 			$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15, 'B');
-			$this->Cell_DownText($width, $height, '$' . number_format($hylite->annualCost));
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->annualCost, 2));
 			$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15);
 			
 			// total cost of ownership
 			$this->Start_Table($left, 4.75);
 			$this->Cell_DownText($width, $height, number_format($hylite->lifetimeUsageKwh));
-			$this->Cell_DownText($width, $height, '$' . number_format($hylite->lifetimeElectricityCost));
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->lifetimeElectricityCost, 2));
 			$this->Cell_DownText($width, $height += 0.03, '$0');
 			//$hylite_lifetimeCost = $hylite_lifetimeElectricityCost;
 			$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15, 'B');
-			$this->Cell_DownText($width, $height, '$' . number_format($hylite->lifetimeCost));
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->lifetimeCost, 2));
 			$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15);
 
 			// hylite savings information
@@ -804,11 +809,11 @@
 			$width = 0.95;
 			$align = 'R';
 			$this->Set_FontColor(109, 193, 15);
-			$this->Cell_DownText($width, $height, '$' . number_format($hylite->savings), $align);
-			$this->Cell_DownText($width, $height, '$' . number_format($yearOne * $hylite->savings), $align);
-			$this->Cell_DownText($width, $height, '$' . number_format($yearTwo * $hylite->savings), $align);
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->savings, 2), $align);
+			$this->Cell_DownText($width, $height, '$' . number_format($yearOne * $hylite->savings, 2), $align);
+			$this->Cell_DownText($width, $height, '$' . number_format($yearTwo * $hylite->savings, 2), $align);
 			//$total_savings = $current->lifetimeCost - $hylite->lifetimeCost;
-			$this->Cell_DownText($width, $height, '$' . number_format($hylite->total_savings), $align);
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->total_savings, 2), $align);
 			$this->Cell_DownText($width, $height, '$' . round(floatval($hylite->savings) / floatval(365), 2), $align);
 			
 			// environmental impact
@@ -847,7 +852,7 @@
 				$height = 0.23;
 				$align = 'L';
 				$left = 4.02;
-				$down = 6.12;
+				$down = 6.08;
 				$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255);
 				$this->Start_Table($left, $down);
 				$this->Cell_DownText($width, $height, 'Initial Investment:', $align);
@@ -864,14 +869,14 @@
 				$width = 0.95;
 				$align = 'R';
 				$this->Set_FontColor(109, 193, 15);
-				$this->Cell_DownText($width, $height, '$' . number_format($hylite->initial_investment), $align);
+				$this->Cell_DownText($width, $height, '$' . number_format($hylite->initial_investment, 2), $align);
 				$this->Set_FontColor(255, 0, 0);
-				$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_utilities), $align);
-				$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_state), $align);
-				$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_federal), $align);
+				$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_utilities, 2), $align);
+				$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_state, 2), $align);
+				$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_federal, 2), $align);
 				$this->Set_FontColor(109, 193, 15);
 				$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15, 'B');
-				$this->Cell_DownText($width, $height, '$' . number_format($hylite->net_investment), $align);
+				$this->Cell_DownText($width, $height, '$' . number_format($hylite->net_investment, 2), $align);
 				$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15);
 			}
 			
@@ -909,8 +914,8 @@
 			if (!$current->include_rebInc) {
 				$this->Cell_DownText($width, $height, '$' . number_format($hylite->initial_investment), $align);
 			}
-			$this->Cell_DownText($width, $height, '$' . number_format($hylite->total_savings), $align);
-			$this->Cell_DownText($width, $height, '$' . number_format($hylite->total_savings - $hylite->net_investment), $align);
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->total_savings, 2), $align);
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->total_savings - $hylite->net_investment, 2), $align);
 			$this->Cell_DownText($width, $height, number_format(100 * ((($yearOne * $hylite->savings) - $hylite->net_investment) / $hylite->net_investment)) . '%', $align);
 			$this->Cell_DownText($width, $height, number_format(100 * ((($yearTwo * $hylite->savings) - $hylite->net_investment) / $hylite->net_investment)) . '%', $align);
 			$this->Cell_DownText($width, $height, number_format($hylite->total_roi) . '%', $align);
@@ -925,16 +930,16 @@
 			
 			// top quote table
 			$height = 0.18;
-			$this->Start_Table(0.49, 2.68);
+			$this->Start_Table(0.19, 2.68);
 			$this->Set_FontAndColor('Helvetica', 10, 0, 0, 0);
-			$this->Cell_RightText(0.73, $height, date("m/d/y"));
-			$this->Cell_Right(1.37, $height, 'by_name');
+			$this->Cell_RightText(0.80, $height, date("m/d/y"));
+			$this->Cell_Right(1.50, $height, 'by_name');
 			
 			$total_price = 0;
 			
 			// section table
 			$height = 0.22;
-			$this->Start_Table(0.49, 3.53);
+			$this->Start_Table(0.19, 3.53);
 			$this->Set_FontAndColor('Helvetica', 9, 0, 0, 0);
 			$this->fData->use_sectionData = true;
 			for ($i = 1; $i <= $this->num_sections; $i++)
@@ -953,23 +958,23 @@
 				$line_price = $total_quantity * $hylite->price;
 				$total_price += $line_price;
 				
-				$this->Cell_RightText(0.43, $height, $total_quantity);
-				$this->Cell_RightText(1.67, $height, $this->data('section_hylite_sku'), 'L');
-				$this->Cell_RightText(3.18, $height, $hylite->desc, 'L');
-				$this->Cell_RightText(0.62, $height, '$' . $hylite->price);
-				$this->Cell_RightText(0.56, $height, '$' . number_format($line_price));
+				$this->Cell_RightText(0.48, $height, $total_quantity);
+				$this->Cell_RightText(1.83, $height, $this->data('section_hylite_sku'), 'L');
+				$this->Cell_RightText(3.52, $height, $hylite->desc, 'L');
+				$this->Cell_RightText(0.70, $height, '$' . number_format($hylite->price, 2));
+				$this->Cell_RightText(0.65, $height, '$' . number_format($line_price, 2), 'R');
 				$this->Next_Row($i, $height);
 			}
 			$this->fData->use_sectionData = false;
 			
 			$this->Set_FontAndColor('Helvetica', 10, 0, 0, 0);
-			$width = 0.56;
-			$this->Start_Table(6.41, 5.17);
-			$this->Cell_DownText($width, $height, '$' . number_format($total_price));
+			$width = 1.60;
+			$this->Start_Table(5.73, 5.17);
+			$this->Cell_DownText($width, $height, '$' . number_format($total_price, 2));
 			$this->Cell_DownText($width, $height, '-');
 			$this->Cell_DownText($width, $height, '-');
 			$this->Cell_DownText($width, $height, '-');
-			$this->Cell_DownText($width, $height, '$' . number_format($total_price));
+			$this->Cell_DownText($width, $height, '$' . number_format($total_price, 2));
 		}
 
 		function Page_Assumptions() {
