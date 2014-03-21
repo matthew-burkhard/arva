@@ -1,39 +1,15 @@
-<?php
-	$con = mysqli_connect("localhost", "arvaus5_qg", "quoteGenerator123", "arvaus5_hylite");
-	if (mysqli_connect_errno($con)) {
-		echo "Failed to connect to database: " . mysqli_connect_error();
+
+
+security_check();
+
+function security_check() {
+	if (document.referrer.indexOf('guardian.html') < 0) {
+		//window.location.replace("index.html");
 	}
-?>
-<html>
-<head>
-<title>ARVA - Quote Generator</title>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-<link href="bootstrap-3.1.1-dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
-<script type="text/javascript">
-
-if (document.referrer.indexOf('guardian.html') < 0) {
-	//window.location.replace("index.html");
 }
-
 
 var max_sections = 6;
 var current_section = 1;
-
-var led_series = new Array();
-<?php
-$rs = mysqli_query($con, "select sku from products where type = 'led'");
-while($row = mysqli_fetch_array($rs)) {
-	echo "led_series.push('" . $row['sku'] . "');";
-}
-?>
-var induction_series = new Array();
-<?php
-$rs = mysqli_query($con, "select sku from products where type = 'induction'");
-while($row = mysqli_fetch_array($rs)) {
-	echo "induction_series.push('" . $row['sku'] . "');";
-}
-?>
 
 function input(txt, val) {
 	document.getElementsByName(txt)[0].value = val;
@@ -102,8 +78,12 @@ function generate_dropdown() {
 	if (edit.length <= num) { // create new elements
 		for (var i = 0; i < num; i++) {
 			var number = i + 1;
-			var op = new Option(
-				'Section #' + number + ' (' +  element(number + '_section_name').value + ')', number);
+			var text = '';
+			if (element(number + '_section_name').value == '')
+				text = '#' + number;
+			else
+				text = element(number + '_section_name').value;
+			var op = new Option(text, number);
 			if (edit[i]) edit[i] = op;
 			else edit.add(op);
 		}
@@ -172,7 +152,7 @@ function demo() {
 			input(i + '_section_hylite_sku', 'HL-HN-B-150W-50K-AC');
 			input(i + '_section_hylite_numFixtures', 15);
 			input(i + '_section_hylite_lampsPerFixture', 1);
-			input(i + '_section_hylite_unitPrice', 300.00);
+			input(i + '_section_hylite_unitPrice', 301.00);
 			
 			input(i + '_section_maint_include', true);
 			input(i + '_section_maint_costPerBulbReplace', 25);
@@ -182,7 +162,7 @@ function demo() {
 			input(i + '_section_maint_ballast_include', true);
 			//input(i + '_section_maint_costPerBallastReplace', 0);
 			input(i + '_section_maint_ballast_lifeHours', 25000);
-			input(i + '_section_maint_ballast_replacementCost', 90.00);
+			input(i + '_section_maint_ballast_replacementCost', 91.00);
 			input(i + '_section_maint_ballast_numPerLum', 1.00);
 		}
 		else if (i == 2) {
@@ -205,7 +185,7 @@ function demo() {
 			input(i + '_section_hylite_sku', 'HL-PN-B-200W-50K-AC');
 			input(i + '_section_hylite_numFixtures', 15);
 			input(i + '_section_hylite_lampsPerFixture', 1);
-			input(i + '_section_hylite_unitPrice', 500.00);
+			input(i + '_section_hylite_unitPrice', 501.00);
 			
 			input(i + '_section_maint_include', true);
 			input(i + '_section_maint_costPerBulbReplace', 55);
@@ -300,159 +280,3 @@ function validate_input() {
 	else
 		document.getElementById("error_message").innterHTML = "";
 }
-
-</script>
-</head>
-<body onload="generate_sections();">
-<form class="form-horizontal" role="form" name="data" method="post" action="generator.php" target="_blank">
-
-	<div style="margin-left:auto;margin-right:auto;border:2px solid #a1a1a1;padding:10px 40px;background:#dddddd;width:75%;border-radius:25px;">
-		<b>Arva Proposal Generator | v1.0.0</b><br /><br />
-		<div class="form-group">
-			<div><label>Document Type</label></div>
-			<div class="col-sm-12">
-				<select type="text" class="form-control" id="inputEmail3" name="doc_type">
-					<option value="proposal">Standard Proposal</option>
-					<option value="energy_savings">Energy Savings</option>
-					<option value="quote">Quote</option>
-				</select>
-			</div>			
-			<div><label>Total Sections</label></div>
-			<div class="col-sm-12">
-				<select type="text" class="form-control" id="inputEmail3" name="num_sections" onchange="save_section(); generate_dropdown();">
-					<option value="1">1</option>
-					<option value="2">2</option>
-					<option value="3">3</option>
-					<option value="4">4</option>
-					<option value="5">5</option>
-					<option value="6">6</option>
-				</select>
-			</div>
-		</div>
-	</div>
-
-	<br />
-
-	<div style="margin-left:auto;margin-right:auto;border:2px solid #a1a1a1;padding:10px 40px;background:#dddddd;width:45%;border-radius:25px;">
-		<b><u>Prepared for</u></b><br />
-		<div class="form-group" >
-			<div><label>Name</label></div>
-			<div class="col-sm-12"><input type="text" class="form-control" id="for_name" name="for_name" placeholder=""></div>
-			<div><label>Company</label></div>
-			<div class="col-sm-12"><input type="text" class="form-control" id="for_company" name="for_company" placeholder=""></div>
-			<div><label>Address</label></div>
-			<div class="col-sm-12"><input type="text" class="form-control" id="for_address" name="for_address" placeholder=""></div>	
-			<div><label>City</label></div>
-			<div class="col-sm-12"><input type="text" class="form-control" id="for_city" name="for_city" placeholder=""></div>	
-			<div><label>State</label></div>
-			<div class="col-sm-12"><input type="text" class="form-control" id="for_state" name="for_state" placeholder=""></div>							
-			<div><label>Zip</label></div>
-			<div class="col-sm-12"><input type="text" class="form-control" id="for_zip" name="for_zip" placeholder=""></div>		
-		</div>
-		<b>Prepared by</b><br />
-		<div class="form-group">
-			<div><label>Name</label></div>
-			<div class="col-sm-12"><input type="text" class="form-control" id="by_name" name="by_name" placeholder=""></div>
-			<div><label>Email</label></div>
-			<div class="col-sm-12"><input type="text" class="form-control" id="by_email" name="by_email" placeholder=""></div>
-			<div><label>Phone</label></div>
-			<div class="col-sm-12"><input type="text" class="form-control" id="by_phone" name="by_phone" placeholder=""></div>		
-		</div>
-	</div>
-
-	<br />
-
-	<div style="margin-left: auto;margin-right:auto;border:2px solid #a1a1a1;padding:10px 40px;background:#dddddd;width:70%;border-radius:25px;">
-		<table style="width: 100%;">
-			<tr>
-				<td colspan="2">
-					<label for="inputEmail3" class="col-sm-8 control-label">Edit:</label>
-					<div class="col-sm-4">
-					<select type="text" class="form-control" id="inputEmail3" name="edit_sections" onchange="save_section(); load_section();">
-						<option value="1">Section #1</option>
-					</select><br />
-					</div>
-				</td>
-			</tr>
-			<tr>
-				<td style="width:50%;">
-					<b>General Information</b><br />
-					<div class="form-group" >
-						<div><label>Section Name</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_name" name="section_name" placeholder="" onkeyup="save_section(); generate_dropdown();"></div>
-						<div><label>Electricity Rate</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_electricityRate" name="section_electricityRate" placeholder="$/kWh"></div>
-						<div><label>Operating Hours</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_operatingHours" name="section_operatingHours" placeholder="per year" onblur="validate_input();"></div>
-						<div id="error_message" style="color:rgb(255, 0, 0);text-transform:bold;"></div>
-					</div>
-				</td>
-				<td style="width:50%;">
-					<b>General Information</b><br />
-					<div class="form-group" >
-						<div><label>Section Name</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_name" name="section_name" placeholder="" onkeyup="save_section(); generate_dropdown();"></div>
-						<div><label>Electricity Rate</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_electricityRate" name="section_electricityRate" placeholder="$/kWh"></div>
-						<div><label>Operating Hours</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_operatingHours" name="section_operatingHours" placeholder="per year" onblur="validate_input();"></div>
-						<div id="error_message" style="color:rgb(255, 0, 0);text-transform:bold;"></div>
-					</div>
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<b>Current Fixture Data</b><br />
-					<div class="form-group" >
-						<div><label>Fixture Type</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_current_fixture" name="section_current_fixture"></div>
-						<div><label># of Fixtures</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_current_numFixtures" name="section_current_numFixtures" placeholder="#"></div>
-						<div><label>Current Lamp Type</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_current_lamp" name="section_current_lamp" placeholder=""></div>
-						<div><label>Bulb Rated Lamp Life</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_current_lampLife" name="section_current_lampLife" placeholder="in hours"></div>
-						<div><label>Bulb Rated Watts</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_current_watts" name="section_current_watts" placeholder=""></div>
-						<div><label># of Lamps / Fixture</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_current_lampsPerFixture" name="section_current_lampsPerFixture" placeholder="#"></div>			
-						<div><label>Luminaire Watts</label></div>
-						<div class="col-sm-8"><input type="text" class="form-control" id="section_current_lWatts" name="section_current_lWatts" placeholder="watts"></div>						
-					</div>
-				</td>
-				<td>
-					~
-				</td>
-			</tr>
-			<tr>
-				<td>
-					<b>Rebates and Incentives</b><br />
-					<div class="form-group" >
-						<div><label>Include Incentives and Rebates?
-							<select name="section_rebInc_include">
-							<option value="true">Yes</option>
-							<option value="false">No</option>
-							</select>
-						</div>
-						<div><label>Total Utility Rebates</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_rebInc_utility" name="section_rebInc_utility"  placeholder="$0.00"></div>
-						<div><label>Total Local and State Incentives</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_rebInc_localState" name="section_rebInc_localState" placeholder="$0.00"></div>
-						<div><label>Total Federal Incentives</label></div>
-						<div class="col-sm-12"><input type="text" class="form-control" id="section_rebInc_federal" name="section_rebInc_federal" placeholder="$0.00"></div>
-					</div>
-				</td>
-				<td>
-					~
-				</td>
-			</tr>
-		</table>
-	</div>
-
-	<div style="position: fixed; bottom: 10px; right: 10px; display: block">
-		<input type="submit" value="" onclick="save_section();" style="height: 64px; width: 64px; background: url(img/pdf.png) no-repeat; background-size:100% 100%;"/>
-	</div>
-
-</form>
-</body>
-</html>

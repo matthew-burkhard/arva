@@ -145,7 +145,7 @@
 			
 			$this->lifetimeUsageKwh = ($this->lWatts * $this->num_fixtures * $this->hylite->lamp_life_rated) / 1000;
 			$this->lifetimeElectricityCost = $this->lifetimeUsageKwh * $this->electricity_rate;
-			if ($current->include_maint == 0) {
+			if ($this->include_maint == 0) {
 				$this->lifetimeMaintCost = 0;
 			}
 			else {
@@ -368,12 +368,12 @@
 			$this->Move($this->tableX, $this->tableY);
 		}
 		
-		function Cell_RightText($w, $h, $text, $align = 'C') {
-			$this->pdf->Cell($w, $h, $text, $this->border, 0, $align);
+		function Cell_RightText($w, $h, $text, $align = 'C', $fill = false) {
+			$this->pdf->Cell($w, $h, $text, $this->border, 0, $align, $fill);
 		}
 		
-		function Cell_Right($w, $h, $dataKey, $opText = '') {
-			$this->Cell_RightText($w, $h, $this->data($dataKey) . $opText);
+		function Cell_Right($w, $h, $dataKey, $opText = '', $align ='C', $fill = false) {
+			$this->Cell_RightText($w, $h, $this->data($dataKey) . $opText, $align, $fill);
 		}
 
 		function Cell_DownText($w, $h, $text, $align = 'C') {
@@ -449,18 +449,107 @@
 		}
 		
 		function Page_ExecutiveSummary() {
-			$this->NewPage('pdf/02_graph_' . $this->num_sections . '.pdf');
+			//$this->NewPage('pdf/02_graph_' . $this->num_sections . '.pdf');
+			$this->NewPage('pdf/02_execSummary.pdf');
 			
-			$height = 0.21;
+			// write out the double line column headers...
+
+			$col_width = array(
+				1 => 0.78,
+				2 => 0.52,
+				3 => 1.08,
+				4 => 0.80, 
+				5 => 0.81,
+				6 => 0.97,
+				7 => 0.82,
+				8 => 0.72,
+				9 => 0.84
+			);
+
+			$this->Start_Table(0.07, 2.83);
+			$this->border = 0;
+			$height = 0.12;
+
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
+			$this->Set_FontColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_RightText($col_width[1], $height, '');
+			$this->Cell_RightText($col_width[2], $height, 'Number', 'C');	
+
+			$this->Set_FontColor(255, 0, 0);
+			$this->pdf->SetDrawColor(255, 0, 0);
+			$this->Cell_RightText($col_width[3], $height, '');
+			$this->Cell_RightText($col_width[4], $height, 'Current Lamp', 'C');
+			$this->Cell_RightText($col_width[5], $height, 'Current Lamp', 'C');
 			
+			$this->Set_FontColor(109, 193, 15);
+			$this->pdf->SetDrawColor(109, 193, 15);
+			$this->Cell_RightText($col_width[6], $height, 'HyLite', 'C');
+			$this->Cell_RightText($col_width[7], $height, '');
+			$this->Cell_RightText($col_width[8], $height, 'HyLite Lamp', 'C');
+			$this->Cell_RightText($col_width[9], $height, 'Energy Savings', 'C');			
+
+			$this->Next_Row(1, $height);
+
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
+			$this->Set_FontColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_RightText($col_width[1], $height, '');
+			$this->Cell_RightText($col_width[2], $height, 'of Lights', 'C');	
+
+			$this->Set_FontColor(255, 0, 0);
+			$this->pdf->SetDrawColor(255, 0, 0);
+			$this->Cell_RightText($col_width[3], $height, '');
+			$this->Cell_RightText($col_width[4], $height, 'Watts', 'C');
+			$this->Cell_RightText($col_width[5], $height, 'Life (hrs.)', 'C');
+			
+			$this->Set_FontColor(109, 193, 15);
+			$this->pdf->SetDrawColor(109, 193, 15);
+			$this->Cell_RightText($col_width[6], $height, 'Replacement', 'C');
+			$this->Cell_RightText($col_width[7], $height, '');
+			$this->Cell_RightText($col_width[8], $height, 'Life (hrs.)', 'C');
+			$this->Cell_RightText($col_width[9], $height, '(%)', 'C');
+
 			// print section information
-			$this->Start_Table(0.07, 3.04);
+			$this->Start_Table(0.07, 2.83);
+			$this->border = 1;
+			$height = 0.24;
+
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
+			$this->Set_FontColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_RightText($col_width[1], $height, 'Section', 'C');
+			
+			//$this->pdf->MultiCell(0.52, $height, 'Number\n of Lights', 'C');
+			$this->Cell_RightText($col_width[2], $height, '');	
+
+			$this->Set_FontColor(255, 0, 0);
+			$this->pdf->SetDrawColor(255, 0, 0);
+			$this->Cell_RightText($col_width[3], $height, 'Current Lamps', 'C');
+			$this->Cell_RightText($col_width[4], $height, '');
+			$this->Cell_RightText($col_width[5], $height, '', 'C');
+			
+			$this->Set_FontColor(109, 193, 15);
+			$this->pdf->SetDrawColor(109, 193, 15);
+			$this->Cell_RightText($col_width[6], $height, '');
+			$this->Cell_RightText($col_width[7], $height, 'HyLite Watts', 'C');
+			$this->Cell_RightText($col_width[8], $height, '');
+			$this->Cell_RightText($col_width[9], $height, '');
+
+			$this->Start_Table(0.07, 3.07);
+			$height = 0.21;
+
 			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0);
 			$this->fData->use_sectionData = true;
 			for ($i = 1; $i <= $this->num_sections; $i++)
 			{
 				$this->fData->current_section = $i; // set your section
 				
+				if ($i % 2 == 0)
+					$this->pdf->SetFillColor(241, 241, 241);
+				else
+					$this->pdf->SetFillColor(255, 255, 255);
+
 				$hylite = new HyliteProduct();
 				$current = new SectionInfo();
 				$hylite->Load($this->fData, $this->data('section_hylite_sku'), $current);
@@ -470,30 +559,32 @@
 				$hylite->Load_Savings();
 			
 				$this->Set_FontColor(0, 0, 0);
-				$this->Cell_Right(0.78, $height, 'section_name');
-				$this->Cell_RightText(0.52, $height, $current->num_fixtures * $current->lamps_per_fixture);
+				$this->pdf->SetDrawColor(0, 0, 0);
+				$this->Cell_Right($col_width[1], $height, 'section_name', '', 'C', true);
+				$this->Cell_RightText($col_width[2], $height, $current->num_fixtures * $current->lamps_per_fixture, 'C', true);
 				
 				$this->Set_FontColor(255, 0, 0);
-				$this->Cell_RightText(0.97, $height, $current->lamp);
-				$this->Cell_RightText(0.86, $height, number_format($current->watts) . 'W');
-				$this->Cell_RightText(0.81, $height, number_format($current->lamp_life));
+				$this->pdf->SetDrawColor(255, 0, 0);
+				$this->Cell_RightText($col_width[3], $height, $current->lamp, 'C', true);
+				$this->Cell_RightText($col_width[4], $height, number_format($current->watts) . 'W', 'C', true);
+				$this->Cell_RightText($col_width[5], $height, number_format($current->lamp_life), 'C', true);
 				
 				$this->Set_FontColor(109, 193, 15);
-				$this->Cell_RightText(0.97, $height, $hylite->series);
-				$this->Cell_RightText(0.87, $height, number_format($hylite->watts) . 'W');				
-				$this->Cell_RightText(0.72, $height, number_format($hylite->lamp_life_rated));
+				$this->pdf->SetDrawColor(109, 193, 15);
+				$this->Cell_RightText($col_width[6], $height, $hylite->series, 'C', true);
+				$this->Cell_RightText($col_width[7], $height, number_format($hylite->watts) . 'W', 'C', true);				
+				$this->Cell_RightText($col_width[8], $height, number_format($hylite->lamp_life_rated), 'C', true);
 				
 				//(Current annual kWh – HyLite annual kWh)/(Current annual kWh)
 				$energy_savings = ($current->annualUsageKwh - $hylite->annualUsageKwh) / $current->annualUsageKwh;
 				$energy_savings = round($energy_savings * 100, 0);
 
-				$this->Cell_RightText(0.84, $height, $energy_savings . '%');
+				$this->Cell_RightText($col_width[9], $height, $energy_savings . '%', 'C', true);
 				
 				$this->Next_Row($i, $height);
 			}
-			
-			$this->Start_Table(0.07, 5.06);
-			// print financial information
+
+			$this->pdf->SetFillColor(0, 0, 0);
 
 			$total_num_lights = 0;
 			$total_current_annualCost = 0;
@@ -512,10 +603,153 @@
 			$total_local_rebates = 0;
 			$total_federal_rebates = 0;
 
+			$this->Start_Table(0.07, 4.79);
+			$this->border = 0;
+			$height = 0.10;
+
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
+			$this->Set_FontColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_RightText($col_width[1], $height, '');
+			$this->Cell_RightText($col_width[2], $height, '');	
+
+			$this->Set_FontColor(255, 0, 0);
+			$this->pdf->SetDrawColor(255, 0, 0);
+			$this->Cell_RightText($col_width[3], $height, '');
+			$this->Cell_RightText($col_width[4], $height, 'Current Total', 'C');
+			
+			$this->Set_FontColor(109, 193, 15);
+			$this->pdf->SetDrawColor(109, 193, 15);
+			$this->Cell_RightText($col_width[5], $height, 'HyLite Annual', 'C');
+			$this->Cell_RightText($col_width[6], $height, '');
+			$this->Cell_RightText($col_width[7], $height, '');
+			$this->Cell_RightText($col_width[8], $height, '');
+			$this->Cell_RightText($col_width[9], $height, '');
+
+			$this->Next_Row(1, $height);
+
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
+			$this->Set_FontColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_RightText($col_width[1], $height, '');
+			$this->Cell_RightText($col_width[2], $height, '');	
+
+			$this->Set_FontColor(255, 0, 0);
+			$this->pdf->SetDrawColor(255, 0, 0);
+			$this->Cell_RightText($col_width[3], $height, '');
+			$this->Cell_RightText($col_width[4], $height, 'Cost of', 'C');
+			
+			$this->Set_FontColor(109, 193, 15);
+			$this->pdf->SetDrawColor(109, 193, 15);
+			$this->Cell_RightText($col_width[5], $height, 'Cost of', 'C');
+			$this->Cell_RightText($col_width[6], $height, '');
+			$this->Cell_RightText($col_width[7], $height, '');
+			$this->Cell_RightText($col_width[8], $height, '');
+			$this->Cell_RightText($col_width[9], $height, '');
+
+			$this->Next_Row(2, $height);
+
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
+			$this->Set_FontColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_RightText($col_width[1], $height, '');
+			$this->Cell_RightText($col_width[2], $height, '');	
+
+			$this->Set_FontColor(255, 0, 0);
+			$this->pdf->SetDrawColor(255, 0, 0);
+			$this->Cell_RightText($col_width[3], $height, '');
+			$this->Cell_RightText($col_width[4], $height, 'Ownership', 'C');
+			
+			$this->Set_FontColor(109, 193, 15);
+			$this->pdf->SetDrawColor(109, 193, 15);
+			$this->Cell_RightText($col_width[5], $height, 'Ownership', 'C');
+			$this->Cell_RightText($col_width[6], $height, '');
+			$this->Cell_RightText($col_width[7], $height, '');
+			$this->Cell_RightText($col_width[8], $height, '');
+			$this->Cell_RightText($col_width[9], $height, '');			
+
+			$this->Start_Table(0.07, 4.79);
+			$this->border = 0;
+			$height = 0.15;
+
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
+			$this->Set_FontColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_RightText($col_width[1], $height, '');
+			$this->Cell_RightText($col_width[2], $height, 'Number', 'C');	
+
+			$this->Set_FontColor(255, 0, 0);
+			$this->pdf->SetDrawColor(255, 0, 0);
+			$this->Cell_RightText($col_width[3], $height, 'Current Annual Cost', 'C');
+			$this->Cell_RightText($col_width[4], $height, '', 'C');
+			
+			$this->Set_FontColor(109, 193, 15);
+			$this->pdf->SetDrawColor(109, 193, 15);
+			$this->Cell_RightText($col_width[5], $height, '', 'C');
+			$this->Cell_RightText($col_width[6], $height, 'Hylite Total Cost of', 'C');
+			$this->Cell_RightText($col_width[7], $height, 'Initial');
+			$this->Cell_RightText($col_width[8], $height, '');
+			$this->Cell_RightText($col_width[9], $height, 'Payback', 'C');
+
+			$this->Next_Row(1, $height);
+
+			$this->Set_FontColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_RightText($col_width[1], $height, '');
+			$this->Cell_RightText($col_width[2], $height, 'of Lights', 'C');	
+
+			$this->Set_FontColor(255, 0, 0);
+			$this->pdf->SetDrawColor(255, 0, 0);
+			$this->Cell_RightText($col_width[3], $height, 'of Ownership', 'C');
+			$this->Cell_RightText($col_width[4], $height, '', 'C');
+			
+			$this->Set_FontColor(109, 193, 15);
+			$this->pdf->SetDrawColor(109, 193, 15);
+			$this->Cell_RightText($col_width[5], $height, '', 'C');
+			$this->Cell_RightText($col_width[6], $height, 'Ownership', 'C');
+			$this->Cell_RightText($col_width[7], $height, 'Investment');
+			$this->Cell_RightText($col_width[8], $height, '');
+			$this->Cell_RightText($col_width[9], $height, '(Months)', 'C');
+
+			$this->Start_Table(0.07, 4.79);
+			$this->border = 1;
+			// print financial information
+			$height = 0.30;
+
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
+			$this->Set_FontColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_RightText($col_width[1], $height, 'Section', 'C');
+			
+			//$this->pdf->MultiCell(0.52, $height, "Number\n of Lights", 0);
+			$this->Cell_RightText($col_width[2], $height, '');	
+
+			$this->Set_FontColor(255, 0, 0);
+			$this->pdf->SetDrawColor(255, 0, 0);
+			$this->Cell_RightText($col_width[3], $height, '');
+			$this->Cell_RightText($col_width[4], $height, '');
+			
+			$this->Set_FontColor(109, 193, 15);
+			$this->pdf->SetDrawColor(109, 193, 15);
+			$this->Cell_RightText($col_width[5], $height, '');
+			$this->Cell_RightText($col_width[6], $height, '');
+			$this->Cell_RightText($col_width[7], $height, '', 'C');
+			$this->Cell_RightText($col_width[8], $height, 'ROI (%)', 'C');
+			$this->Cell_RightText($col_width[9], $height, '');
+
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0); 
+			$this->Start_Table(0.07, 5.09);
+			$height = 0.21;
+
 			for ($i = 1; $i <= $this->num_sections; $i++)
 			{
 				$this->fData->current_section = $i; // set your section
 				
+				if ($i % 2 == 0)
+					$this->pdf->SetFillColor(241, 241, 241);
+				else
+					$this->pdf->SetFillColor(255, 255, 255);
+
 				$hylite = new HyliteProduct();
 				$current = new SectionInfo();
 				$hylite->Load($this->fData, $this->data('section_hylite_sku'), $current);
@@ -525,26 +759,29 @@
 				$hylite->Load_Savings();
 			
 				$this->Set_FontColor(0, 0, 0);
-				$this->Cell_Right(0.78, $height, 'section_name');
-				$this->Cell_RightText(0.51, $height, $current->num_fixtures * $current->lamps_per_fixture);
+				$this->pdf->SetDrawColor(0, 0, 0);
+				$this->Cell_Right($col_width[1], $height, 'section_name', '', 'C', true);
+				$this->Cell_RightText($col_width[2], $height, $current->num_fixtures * $current->lamps_per_fixture, 'C', true);
 				$total_num_lights += $current->num_fixtures * $current->lamps_per_fixture;
 				
 				$this->Set_FontColor(255, 0, 0);
-				$this->Cell_RightText(0.97, $height, '$' . number_format($current->annualCost, 2));
+				$this->pdf->SetDrawColor(255, 0, 0);
+				$this->Cell_RightText($col_width[3], $height, '$' . number_format($current->annualCost, 2), 'C', true);
 				$total_current_annualCost += $current->annualCost;
-				$this->Cell_RightText(0.86, $height, '$' . number_format($current->lifetimeCost, 2));
+				$this->Cell_RightText($col_width[4], $height, '$' . number_format($current->lifetimeCost, 2), 'C', true);
 				$total_current_lifetimeCost += $current->lifetimeCost;
 
 				$this->Set_FontColor(109, 193, 15);
-				$this->Cell_RightText(0.81, $height, '$' . number_format($hylite->annualCost, 2));
+				$this->pdf->SetDrawColor(109, 193, 15);
+				$this->Cell_RightText($col_width[5], $height, '$' . number_format($hylite->annualCost, 2), 'C', true);
 				$total_hylite_annualCost += $hylite->annualCost;
-				$this->Cell_RightText(0.97, $height, '$' . number_format($hylite->lifetimeCost, 2));
+				$this->Cell_RightText($col_width[6], $height, '$' . number_format($hylite->lifetimeCost, 2), 'C', true);
 				$total_hylite_lifetimeCost += $hylite->lifetimeCost;
-				$this->Cell_RightText(0.88, $height, '$' . number_format($hylite->initial_investment, 2));
+				$this->Cell_RightText($col_width[7], $height, '$' . number_format($hylite->initial_investment, 2), 'C', true);
 				$total_initial_investment += $hylite->initial_investment;
-				$this->Cell_RightText(0.72, $height, number_format($hylite->total_roi) . '%');
+				$this->Cell_RightText($col_width[8], $height, number_format($hylite->total_roi) . '%', 'C', true);
 				//$total_total_roi += $hylite->total_roi;
-				$this->Cell_RightText(0.84, $height, $hylite->payback_months);
+				$this->Cell_RightText($col_width[9], $height, $hylite->payback_months, 'C', true);
 				//$total_payback_months += $hylite->payback_months;
 				
 				$total_co2_offset += $hylite->co2_offset;
@@ -560,33 +797,49 @@
 
 				$this->Next_Row($i, $height);
 			}
+			$this->pdf->SetFillColor(0, 0, 0);
 			$this->fData->use_sectionData = false;
 			
 			// print summary line
-			$this->Set_FontColor(0, 0, 0);
-			$this->Cell_Right(0.78, $height, '');
-			$this->Cell_RightText(0.51, $height, $total_num_lights);
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_RightText($col_width[1], $height, 'Total');
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0);
+			$this->Cell_RightText($col_width[2], $height, $total_num_lights);
 			
 			$this->Set_FontColor(255, 0, 0);
-			$this->Cell_RightText(0.97, $height, '$' . number_format($total_current_annualCost, 2));
-			$this->Cell_RightText(0.86, $height, '$' . number_format($total_current_lifetimeCost, 2));
+			$this->pdf->SetDrawColor(255, 0, 0);
+			$this->Cell_RightText($col_width[3], $height, '$' . number_format($total_current_annualCost, 2));
+			$this->Cell_RightText($col_width[4], $height, '$' . number_format($total_current_lifetimeCost, 2));
 			
 			$this->Set_FontColor(109, 193, 15);
-			$this->Cell_RightText(0.81, $height, '$' . number_format($total_hylite_annualCost, 2));
-			$this->Cell_RightText(0.97, $height, '$' . number_format($total_hylite_lifetimeCost, 2));
-			$this->Cell_RightText(0.88, $height, '$' . number_format($total_initial_investment, 2));
+			$this->pdf->SetDrawColor(109, 193, 15);
+			$this->Cell_RightText($col_width[5], $height, '$' . number_format($total_hylite_annualCost, 2));
+			$this->Cell_RightText($col_width[6], $height, '$' . number_format($total_hylite_lifetimeCost, 2));
+			$this->Cell_RightText($col_width[7], $height, '$' . number_format($total_initial_investment, 2));
 
 			// now subtract the rebates
 			$total_initial_investment -= ($total_utility_rebates + $total_local_rebates + $total_federal_rebates);
 
 			$total_total_roi = ((($total_current_lifetimeCost - $total_hylite_lifetimeCost) - $total_initial_investment) / $total_initial_investment) * 100;
-			$this->Cell_RightText(0.72, $height, number_format($total_total_roi) . '%');
+			$this->Cell_RightText($col_width[8], $height, number_format($total_total_roi) . '%');
 			$total_payback_months = ($total_initial_investment / ($total_current_annualCost - $total_hylite_annualCost)) * 12;
-			$this->Cell_RightText(0.84, $height, number_format($total_payback_months));
+			$this->Cell_RightText($col_width[9], $height, number_format($total_payback_months));
+
+			$this->Start_Table(0.46, 6.50);
+			$this->Set_FontColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Cell_DownText(1.60, $height, 'Utility Rebates');
+			$this->Cell_DownText(1.60, $height, 'Local & State Incentives');
+			$this->Cell_DownText(1.60, $height, 'Federal Incentives');
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
+			$this->Cell_DownText(1.60, $height, 'Net Incentives');
+			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0);
 
 			// print utility rebates, local & state incentives, federal incentives and net investment
-			$this->Start_Table(4.95, 6.72);
+			$this->Start_Table(4.95, 6.50);
 			$this->Set_FontColor(109, 193, 15);
+			$this->pdf->SetDrawColor(109, 193, 15);
 			$this->Cell_DownText(0.80, $height, '$' . number_format($total_utility_rebates, 2));
 			//$this->Next_Row(1, $height);
 			$this->Cell_DownText(0.80, $height, '$' . number_format($total_local_rebates, 2));
@@ -596,6 +849,9 @@
 			$this->Cell_DownText(0.80, $height, '$' . number_format($total_initial_investment, 2));
 			//$this->Cell_DownText(0.80, $height, '$' . number_format($total_utility_rebates + $total_local_rebates + $total_federal_rebates));
 			
+			// turn border back off
+			$this->border = 0;
+
 			// environmental impact
 			$width = 0.65;
 			$this->Start_Table(2.00, 8.10);
@@ -648,11 +904,11 @@
 				$this->NewPage('pdf/05_section.pdf');
 			}
 
-			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
-			$this->Move_Write(0, 0, '');
-			$this->NextLine_WriteText($current->include_rebInc);
-			$this->NextLine_WriteText($current->include_maint);
-			$this->NextLine_WriteText($current->include_maint_ballast);
+			// $this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
+			// $this->Move_Write(0, 0, '');
+			// $this->NextLine_WriteText($current->include_rebInc);
+			// $this->NextLine_WriteText($current->include_maint);
+			// $this->NextLine_WriteText($current->include_maint_ballast);
 
 			//Need to fit image into a 110x126 box (1.10w x 1.25h)
 			//But, really, we want to fit the image into a 1.00x1.15 shape
@@ -663,7 +919,7 @@
 			$size = getimagesize($hylite->pic_url());
 			$orig_width = $size[0];
 			$orig_height = $size[1];
-			$x = 6.18;
+			$x = 6.15;
 			$y = 2.40;
 			$desired_w = 1.18;
 			$desired_h = 1.35;
@@ -672,14 +928,18 @@
 			$wide = ($orig_width > $orig_height ? true : false);
 			$long = !$wide;
 			if ($wide) {
-				$width = 1.00;
+				$width = $desired_w;
 				$height = ($orig_height * (($desired_w * 100) / $orig_width)) / 100;
+				if ($height > $desired_h)
+					$height = $desired_h;
 				$y += ($desired_h - $height) / 2;
 				$x += 0.05;
 			}
 			else if ($long) {
 				$height = $desired_h;
 				$width = ($orig_width * (($desired_h * 100) / $orig_height)) / 100;
+				if ($width > $desired_w)
+						$width = $desired_w;
 				$x += ($desired_w - $width) / 2;
 			}
 
@@ -923,24 +1183,51 @@
 		}
 		
 		function Page_Quote() {
-			$this->NewPage('pdf/07_quote_' . $this->num_sections . '.pdf');
+			//$this->NewPage('pdf/07_quote_' . $this->num_sections . '.pdf');
+			$this->NewPage('pdf/07_quote.pdf');
 			
 			$this->Set_FontAndColor('Helvetica', 18, 0, 0, 0);
 			$this->Move_Write(0.60, 1.75, 'for_company');
 			
 			// top quote table
+			// $height = 0.18;
+			// $this->Start_Table(0.19, 2.68);
+			// $this->Set_FontAndColor('Helvetica', 10, 0, 0, 0);
+			// $this->Cell_RightText(0.80, $height, date("m/d/y"));
+			// $this->Cell_Right(1.50, $height, 'by_name');
+			
+			// new quote table...
 			$height = 0.18;
-			$this->Start_Table(0.19, 2.68);
+			$this->Start_Table(0.19, 2.49);
+			$this->border = 1;
+			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->Set_FontAndColor('Helvetica', 10, 0, 0, 0, 'B');
+			$this->pdf->SetFillColor(241, 241, 241);
+			$this->Cell_RightText(0.80, $height, 'Date', 'C', true);
+			$this->Cell_RightText(1.50, $height, 'Sales Rep.', 'C', true);
+			$this->Cell_RightText(1.40, $height, 'Terms', 'C', true);
 			$this->Set_FontAndColor('Helvetica', 10, 0, 0, 0);
+			$this->Next_Row(1, $height);
 			$this->Cell_RightText(0.80, $height, date("m/d/y"));
 			$this->Cell_Right(1.50, $height, 'by_name');
-			
+			$this->Cell_RightText(1.40, $height, 'See Below');
+
 			$total_price = 0;
 			
 			// section table
 			$height = 0.22;
-			$this->Start_Table(0.19, 3.53);
-			$this->Set_FontAndColor('Helvetica', 9, 0, 0, 0);
+			$this->Start_Table(0.19, 3.34);
+			
+			$this->Set_FontAndColor('Helvetica', 8, 0, 0, 0, 'B');
+			$this->pdf->SetFillColor(241, 241, 241);
+			$this->Cell_RightText(0.48, $height, 'Qty', 'C', true);
+			$this->Cell_RightText(1.80, $height, 'Model', 'C', true);
+			$this->Cell_RightText(3.52, $height, 'Description', 'C', true);
+			$this->Cell_RightText(0.68, $height, 'Unit Price', 'C', true);
+			$this->Cell_RightText(0.70, $height, 'Total', 'C', true);
+			$this->Next_Row(1, $height);
+
+			$this->Set_FontAndColor('Helvetica', 8, 0, 0, 0);
 			$this->fData->use_sectionData = true;
 			for ($i = 1; $i <= $this->num_sections; $i++)
 			{
@@ -959,22 +1246,48 @@
 				$total_price += $line_price;
 				
 				$this->Cell_RightText(0.48, $height, $total_quantity);
-				$this->Cell_RightText(1.83, $height, $this->data('section_hylite_sku'), 'L');
+				$this->Cell_RightText(1.80, $height, $this->data('section_hylite_sku'), 'L');
 				$this->Cell_RightText(3.52, $height, $hylite->desc, 'L');
-				$this->Cell_RightText(0.70, $height, '$' . number_format($hylite->price, 2));
-				$this->Cell_RightText(0.65, $height, '$' . number_format($line_price, 2), 'R');
-				$this->Next_Row($i, $height);
+				$this->Cell_RightText(0.68, $height, '$' . number_format($hylite->price, 2));
+				$this->Cell_RightText(0.70, $height, '$' . number_format($line_price, 2), 'R');
+				$this->Next_Row($i + 1, $height);
 			}
 			$this->fData->use_sectionData = false;
 			
-			$this->Set_FontAndColor('Helvetica', 10, 0, 0, 0);
+			
 			$width = 1.60;
-			$this->Start_Table(5.73, 5.17);
-			$this->Cell_DownText($width, $height, '$' . number_format($total_price, 2));
-			$this->Cell_DownText($width, $height, '-');
-			$this->Cell_DownText($width, $height, '-');
-			$this->Cell_DownText($width, $height, '-');
-			$this->Cell_DownText($width, $height, '$' . number_format($total_price, 2));
+			$this->Start_Table(4.00, 5.17);
+
+			$this->Set_FontAndColor('Helvetica', 10, 0, 0, 0, 'B');
+			$this->pdf->SetFillColor(241, 241, 241);
+			$this->Cell_RightText($width, $height, 'Subtotal:', 'L', true);
+			$this->Cell_RightText($width, $height, '$' . number_format($total_price, 2), 'C', true);
+
+			$this->Next_Row(1, $height);
+			$this->Set_FontAndColor('Helvetica', 10, 0, 0, 0);
+			$this->pdf->SetFillColor(0, 0, 0);
+			$this->Cell_RightText($width, $height, 'Subtotal:', 'L');
+			$this->Cell_RightText($width, $height, '-');
+
+			$this->Next_Row(2, $height);
+			$this->Cell_RightText($width, $height, 'Tax:', 'L');
+			$this->Cell_RightText($width, $height, '-');
+
+			$this->Next_Row(3, $height);
+			$this->Cell_RightText($width, $height, 'Shipping and Handling:', 'L');
+			$this->Cell_RightText($width, $height, '-');
+
+			$this->Next_Row(4, $height);
+			$this->Cell_RightText($width, $height, 'Miscellaneous:',  'L');
+			$this->Cell_RightText($width, $height, '-');
+
+			$this->Next_Row(5, $height);
+			$this->Set_FontAndColor('Helvetica', 10, 0, 0, 0, 'B');
+			$this->pdf->SetFillColor(241, 241, 241);
+			$this->Cell_RightText($width, $height, 'Total:', 'L', true);
+			$this->Cell_RightText($width, $height, '$' . number_format($total_price, 2), 'C', true);
+
+			$this->border = 0;
 		}
 
 		function Page_Assumptions() {
