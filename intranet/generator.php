@@ -307,7 +307,7 @@
 		
 		function Start() {
 			$this->fData = new FormData();
-			$this->pdf = new FPDI('P', 'in', array(7.5, 10));
+			$this->pdf = new FPDI('P', 'in', array(8.5, 11));
 			$this->num_sections = $this->data('num_sections');
 			if ($this->debug) {
 				$this->Page_Debug();
@@ -916,6 +916,8 @@
 			//$this->Set_FontAndColor('Helvetica', 12, 255, 0, 0);
 			//$this->Move_WriteText(0, 0.2, '');
 
+			// Also removing this code, as it's not needed for pictures anymore...
+			/*
 			$size = getimagesize($hylite->pic_url());
 			$orig_width = $size[0];
 			$orig_height = $size[1];
@@ -942,6 +944,7 @@
 						$width = $desired_w;
 				$x += ($desired_w - $width) / 2;
 			}
+			*/
 
 			//$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
 			//$this->Start_Table(6.18, 2.40);
@@ -957,7 +960,8 @@
 			// $this->NextLine_WriteText('wide: ' . $wide);
 			// $this->NextLine_WriteText('long: ' . $long);
 		
-			$this->Image($hylite->pic_url(), $x, $y, $width, $height);
+			// Removed placing image...
+			//$this->Image($hylite->pic_url(), $x, $y, $width, $height);
 
 			// write text
 			$this->Set_FontAndColor('Helvetica', 18, 51, 102, 255);
