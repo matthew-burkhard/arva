@@ -1,15 +1,17 @@
 
 
+/* constants */
+var max_sections = 6;
+var current_section = 1;
+
+/* turn this off to be able to access input.php directly */
 security_check();
 
 function security_check() {
 	if (document.referrer.indexOf('guardian.html') < 0) {
-		//window.location.replace("index.html");
+		window.location.replace("index.html");
 	}
 }
-
-var max_sections = 6;
-var current_section = 1;
 
 function input(txt, val) {
 	document.getElementsByName(txt)[0].value = val;
@@ -80,7 +82,7 @@ function generate_dropdown() {
 			var number = i + 1;
 			var text = '';
 			if (element(number + '_section_name').value == '')
-				text = '#' + number;
+				text = 'Section ' + number;
 			else
 				text = element(number + '_section_name').value;
 			var op = new Option(text, number);
@@ -110,7 +112,7 @@ function load_section() {
 }
 
 function allPages(isChecked) {
-	for(var i = 1; i <= 11; i++)
+	for(var i = 1; i <= 12; i++)
 		check('page_' + i, isChecked);
 }
 
@@ -132,7 +134,7 @@ function demo() {
 	input('by_phone', '(803) 493-8886');
 	
 	for(var i = 1; i <= 6; i++) {
-		if (i == 1) {
+		if (i == 1 || i == 4) {
 			input(i + '_section_name', 'Warehouse');
 			input(i + '_section_electricityRate', 0.08);
 			input(i + '_section_operatingHours', 4380);
@@ -146,7 +148,7 @@ function demo() {
 			input(i + '_section_current_lWatts', 458);
 			
 			input(i + '_section_rebInc_include', true);
-			input(i + '_section_rebInc_utility', 500);
+			input(i + '_section_rebInc_total', 500);
 			
 			input(i + '_section_hylite_type', 'induction');
 			input(i + '_section_hylite_sku', 'HL-HN-B-150W-50K-AC');
@@ -160,12 +162,11 @@ function demo() {
 			input(i + '_section_maint_disposalCost', 1.00);
 			
 			input(i + '_section_maint_ballast_include', true);
-			//input(i + '_section_maint_costPerBallastReplace', 0);
 			input(i + '_section_maint_ballast_lifeHours', 25000);
 			input(i + '_section_maint_ballast_replacementCost', 91.00);
 			input(i + '_section_maint_ballast_numPerLum', 1.00);
 		}
-		else if (i == 2) {
+		else if (i == 2 || i == 5) {
 			input(i + '_section_name', 'Parking Lot');
 			input(i + '_section_electricityRate', 0.095);
 			input(i + '_section_operatingHours', 5000);
@@ -179,7 +180,6 @@ function demo() {
 			input(i + '_section_current_lWatts', 294);
 			
 			input(i + '_section_rebInc_include', false);
-			//input(i + '_section_rebInc_utility', 500);
 			
 			input(i + '_section_hylite_type', 'induction');
 			input(i + '_section_hylite_sku', 'HL-PN-B-200W-50K-AC');
@@ -193,12 +193,11 @@ function demo() {
 			input(i + '_section_maint_disposalCost', 1.00);
 			
 			input(i + '_section_maint_ballast_include', true);
-			//input(i + '_section_maint_costPerBallastReplace', 0);
 			input(i + '_section_maint_ballast_lifeHours', 40000);
 			input(i + '_section_maint_ballast_replacementCost', 115.00);
 			input(i + '_section_maint_ballast_numPerLum', 1.00);		
 		}
-		else if (i == 3) {
+		else if (i == 3 || i == 6) {
 			input(i + '_section_name', 'Warehouse 2');
 			input(i + '_section_electricityRate', 0.11);
 			input(i + '_section_operatingHours', 4380);
@@ -212,9 +211,7 @@ function demo() {
 			input(i + '_section_current_lWatts', 465);
 			
 			input(i + '_section_rebInc_include', false);
-			input(i + '_section_rebInc_utility', 5000);
-			input(i + '_section_rebInc_localState', 250);
-			input(i + '_section_rebInc_federal', 0);
+			input(i + '_section_rebInc_total', 5250);
 			
 			input(i + '_section_hylite_type', 'induction');
 			input(i + '_section_hylite_sku', 'HL-PN-B-200W-50K-AC');
@@ -228,33 +225,6 @@ function demo() {
 			input(i + '_section_maint_disposalCost', 0);
 			
 			input(i + '_section_maint_ballast_include', false);
-		}
-		else {
-			input(i + '_section_name', random(new Array('Garage', 'Parking Lot', 'Warehouse', 'Storage Center', 'Outside', 'Service Bay', 'Showroom', 'Wall Packs')));
-			input(i + '_section_electricityRate', 0.12);
-			input(i + '_section_operatingHours', random(new Array(1000, 2000, 3000, 4000)));
-			
-			input(i + '_section_current_fixture', element(i + '_section_name').value + ' Lights');
-			input(i + '_section_current_lamp', random(new Array('Metal Halide', 'Fluorescent')));
-			input(i + '_section_current_numFixtures', random(new Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)));
-			input(i + '_section_current_lampsPerFixture', random(new Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)));
-			input(i + '_section_current_lampLife', random(new Array(10000, 12000)));
-			input(i + '_section_current_watts', random(new Array(40, 75, 100, 150, 175, 1000)));
-			input(i + '_section_current_lWatts', element(i + '_section_current_watts').value * element(i + '_section_current_lampsPerFixture').value);
-			
-			input(i + '_section_hylite_type', random(element('section_hylite_type')).value);
-			if (element(i + '_section_hylite_type').value == 'LED')
-				input(i + '_section_hylite_sku', random(led_series));
-			else
-				input(i + '_section_hylite_sku', random(induction_series));
-			input(i + '_section_hylite_numFixtures', random(new Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)));
-			input(i + '_section_hylite_lampsPerFixture', random(new Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)));
-			input(i + '_section_hylite_unitPrice', random(new Array(25, 50, 75, 100)));
-			
-			// for now, ignore optional sections
-			input(i + '_section_rebInc_include', 'No');
-			input(i + '_section_maint_include', 'No');
-			input(i + '_section_maint_ballast_include', 'No');
 		}
 	}
 	

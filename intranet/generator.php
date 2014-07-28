@@ -1,5 +1,4 @@
-<?php
-	// difference between this and require_once?
+<?php // difference between this and require_once?
 	require('fpdf/fpdf.php');
 	require('fpdi/fpdi.php');
 	
@@ -71,9 +70,10 @@
 		public $ballast_replacement_cost;
 		public $ballast_num_per_lum;
 		
-		public $rebates_utilities;
-		public $rebates_state;
-		public $rebates_federal;
+		public $rebates_total;
+		//public $rebates_utilities;
+		//public $rebates_state;
+		//public $rebates_federal;
 		
 		public $yearsOfOperation;
 		public $annualUsageKwh;
@@ -129,14 +129,10 @@
 			}
 			
 			if ($this->include_rebInc) {
-				$this->rebates_utilities = $a->data_int('section_rebInc_utility');
-				$this->rebates_state = $a->data_int('section_rebInc_localState');
-				$this->rebates_federal = $a->data_int('section_rebInc_federal');
+				$this->rebates_total = $a->data_int('section_rebInc_total');
 			}
 			else {
-				$this->rebates_utilities = 0;
-				$this->rebates_state = 0;
-				$this->rebates_federal = 0;
+				$this->rebates_total = 0;
 			}
 			
 			$this->yearsOfOperation = round($this->lamp_life / $this->operating_hours, 1);
@@ -208,6 +204,7 @@
 		public $miles;
 
 		private $current;
+		public $specSheetUrl;
 
 		function pic_url() {
 			return 'img/' . $this->type . '/' . $this->picture;
@@ -228,6 +225,7 @@
 				$this->watts = intval($row['watts']);
 				$this->lamp_life_rated = intval($row['lamp_life_rated']);
 				$this->picture = $row['picture'];
+				$this->specSheetUrl = $row['specsheet_pdf'];
 			}
 			mysqli_close($con);
 			
@@ -259,7 +257,7 @@
 			$this->savings = $this->current->annualCost - $this->annualCost;
 
 			$this->total_savings = $this->current->lifetimeCost - $this->lifetimeCost;
-			$this->net_investment = $this->initial_investment - $this->current->rebates_utilities - $this->current->rebates_state - $this->current->rebates_federal;
+			$this->net_investment = $this->initial_investment - $this->current->rebates_total;
 			$this->total_roi = 100 * (($this->total_savings - $this->net_investment) / $this->net_investment);
 
 			$this->payback_months = round(($this->net_investment / $this->savings) * 12, 1);
@@ -278,7 +276,7 @@
 		
 		private $num_sections = 0;
 		private $debug = false;
-		private $border = 0;
+		private $border = 1;
 		//private $use_sectionData = false;
 		//private $current_section = 0;
 		
@@ -399,12 +397,7 @@
 		function Image($file, $x, $y, $w, $h) {
 			$this->pdf->Image($file, $x, $y, $w, $h);
 		}
-/*
-		function Image_Tall($file, $x, $y, $h) {
-			$this->pdf->Image($file, $x, $y, 0, $h);
-		}		
-		
-*/		
+
 		function Write_Debug() {
 			$this->Set_FontAndColor('Helvetica', 6, 0, 0, 0);
 			for($x = 0; $x < 6.5; $x += 0.5)
@@ -429,12 +422,12 @@
 		function Page_Title() {
 			$this->NewPage('pdf/01_title.pdf');
 			$this->Set_FontAndColor('Helvetica', 11, 0, 0, 255);
-			$this->Move_Write(3.25, 6.65, 'for_name');
+			$this->Move_Write(3.50, 6.10, 'for_name');
 			$this->NextLine_Write('for_company');
 			$this->NextLine_Write('for_address');
 			$this->NextLine_WriteAddress('for_city', 'for_state', 'for_zip');
 			
-			$this->Move_Write(4.75, 8.35, 'by_name');
+			$this->Move_Write(5.00, 8.62, 'by_name');
 			$this->NextLine_Write('by_email');
 			$this->NextLine_Write('by_phone');
 		}
@@ -442,7 +435,7 @@
 		function Page_Last() {
 			$this->NewPage('pdf/11_lastPage.pdf');
 			$this->Set_FontAndColor('Helvetica', 10, 0, 0, 255);
-			$this->Move_Write(4.35, 3.30, 'by_name');
+			$this->Move_Write(4.45, 2.40, 'by_name');
 			$this->NextLine_Write('by_email');
 			$this->NextLine_Write('by_phone');
 			$this->NextLine_WriteText('www.arva.us');		
@@ -451,6 +444,21 @@
 		function Page_ExecutiveSummary() {
 			//$this->NewPage('pdf/02_graph_' . $this->num_sections . '.pdf');
 			$this->NewPage('pdf/02_execSummary.pdf');
+
+			$total_num_lights = 0;
+			$total_current_annualCost = 0;
+			$total_current_lifetimeCost = 0;
+			$total_hylite_annualCost = 0;
+			$total_hylite_lifetimeCost = 0;
+			$total_initial_investment = 0;
+			$total_total_roi = 0;
+			$total_payback_months = 0;
+
+			$total_co2_offset = 0;
+			$total_miles = 0;
+			$total_trees = 0;
+
+			$total_total_rebates = 0;
 			
 			// write out the double line column headers...
 
@@ -465,11 +473,14 @@
 				8 => 0.72,
 				9 => 0.84
 			);
+		
+			// HyLite Replacement Table
 
-			$this->Start_Table(0.07, 2.83);
+			$this->Start_Table(0.50, 2.45);
 			$this->border = 0;
 			$height = 0.12;
 
+			// Column Headers
 			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
 			$this->Set_FontColor(0, 0, 0);
 			$this->pdf->SetDrawColor(0, 0, 0);
@@ -493,7 +504,7 @@
 
 			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
 			$this->Set_FontColor(0, 0, 0);
-			$this->pdf->SetDrawColor(0, 0, 0);
+			$this->pdf->SetDrawColor(0, 0, 0);	
 			$this->Cell_RightText($col_width[1], $height, '');
 			$this->Cell_RightText($col_width[2], $height, 'of Lights', 'C');	
 
@@ -510,8 +521,7 @@
 			$this->Cell_RightText($col_width[8], $height, 'Life (hrs.)', 'C');
 			$this->Cell_RightText($col_width[9], $height, '(%)', 'C');
 
-			// print section information
-			$this->Start_Table(0.07, 2.83);
+			$this->Start_Table(0.50, 2.45);
 			$this->border = 1;
 			$height = 0.24;
 
@@ -536,7 +546,8 @@
 			$this->Cell_RightText($col_width[8], $height, '');
 			$this->Cell_RightText($col_width[9], $height, '');
 
-			$this->Start_Table(0.07, 3.07);
+			// Section Rows
+			$this->Start_Table(0.50, 2.69);
 			$height = 0.21;
 
 			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0);
@@ -584,29 +595,13 @@
 				$this->Next_Row($i, $height);
 			}
 
+			// Financial Comparison Table
 			$this->pdf->SetFillColor(0, 0, 0);
-
-			$total_num_lights = 0;
-			$total_current_annualCost = 0;
-			$total_current_lifetimeCost = 0;
-			$total_hylite_annualCost = 0;
-			$total_hylite_lifetimeCost = 0;
-			$total_initial_investment = 0;
-			$total_total_roi = 0;
-			$total_payback_months = 0;
-
-			$total_co2_offset = 0;
-			$total_miles = 0;
-			$total_trees = 0;
-
-			$total_utility_rebates = 0;
-			$total_local_rebates = 0;
-			$total_federal_rebates = 0;
-
-			$this->Start_Table(0.07, 4.79);
+			$this->Start_Table(0.50, 4.95);
 			$this->border = 0;
 			$height = 0.10;
 
+			// Column Headers
 			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
 			$this->Set_FontColor(0, 0, 0);
 			$this->pdf->SetDrawColor(0, 0, 0);
@@ -668,7 +663,7 @@
 			$this->Cell_RightText($col_width[8], $height, '');
 			$this->Cell_RightText($col_width[9], $height, '');			
 
-			$this->Start_Table(0.07, 4.79);
+			$this->Start_Table(0.50, 4.95);
 			$this->border = 0;
 			$height = 0.15;
 
@@ -711,7 +706,7 @@
 			$this->Cell_RightText($col_width[8], $height, '');
 			$this->Cell_RightText($col_width[9], $height, '(Months)', 'C');
 
-			$this->Start_Table(0.07, 4.79);
+			$this->Start_Table(0.50, 4.95);
 			$this->border = 1;
 			// print financial information
 			$height = 0.30;
@@ -737,8 +732,9 @@
 			$this->Cell_RightText($col_width[8], $height, 'ROI (%)', 'C');
 			$this->Cell_RightText($col_width[9], $height, '');
 
+			// Section Rows
 			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0); 
-			$this->Start_Table(0.07, 5.09);
+			$this->Start_Table(0.50, 5.25);
 			$height = 0.21;
 
 			for ($i = 1; $i <= $this->num_sections; $i++)
@@ -788,19 +784,14 @@
 				$total_miles += $hylite->miles;
 				$total_trees += $hylite->trees;
 
-				$total_utility_rebates += $current->rebates_utilities;
-				$total_local_rebates += $current->rebates_state;
-				$total_federal_rebates += $current->rebates_federal;
-
-				// Rebates are no longer subtracted
-				//$total_initial_investment -= ($current->rebates_utilities + $current->rebates_state + $current->rebates_federal);
+				$total_total_rebates += $current->rebates_total;
 
 				$this->Next_Row($i, $height);
 			}
 			$this->pdf->SetFillColor(0, 0, 0);
 			$this->fData->use_sectionData = false;
 			
-			// print summary line
+			// Summary Line
 			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
 			$this->pdf->SetDrawColor(0, 0, 0);
 			$this->Cell_RightText($col_width[1], $height, 'Total');
@@ -819,42 +810,34 @@
 			$this->Cell_RightText($col_width[7], $height, '$' . number_format($total_initial_investment, 2));
 
 			// now subtract the rebates
-			$total_initial_investment -= ($total_utility_rebates + $total_local_rebates + $total_federal_rebates);
+			$total_initial_investment -= $total_total_rebates;
 
 			$total_total_roi = ((($total_current_lifetimeCost - $total_hylite_lifetimeCost) - $total_initial_investment) / $total_initial_investment) * 100;
 			$this->Cell_RightText($col_width[8], $height, number_format($total_total_roi) . '%');
 			$total_payback_months = ($total_initial_investment / ($total_current_annualCost - $total_hylite_annualCost)) * 12;
 			$this->Cell_RightText($col_width[9], $height, number_format($total_payback_months));
 
-			$this->Start_Table(0.46, 6.50);
-			$this->Set_FontColor(0, 0, 0);
-			$this->pdf->SetDrawColor(0, 0, 0);
-			$this->Cell_DownText(1.60, $height, 'Utility Rebates');
-			$this->Cell_DownText(1.60, $height, 'Local & State Incentives');
-			$this->Cell_DownText(1.60, $height, 'Federal Incentives');
-			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0, 'B');
-			$this->Cell_DownText(1.60, $height, 'Net Incentives');
-			$this->Set_FontAndColor('Helvetica', 7, 0, 0, 0);
-
-			// print utility rebates, local & state incentives, federal incentives and net investment
-			$this->Start_Table(4.95, 6.50);
+			// Available Incentives
+			$this->Start_Table(3.68, 6.72);
 			$this->Set_FontColor(109, 193, 15);
 			$this->pdf->SetDrawColor(109, 193, 15);
-			$this->Cell_DownText(0.80, $height, '$' . number_format($total_utility_rebates, 2));
-			//$this->Next_Row(1, $height);
-			$this->Cell_DownText(0.80, $height, '$' . number_format($total_local_rebates, 2));
-			//$this->Next_Row(2, $height);
-			$this->Cell_DownText(0.80, $height, '$' . number_format($total_federal_rebates, 2));
-			//$this->Next_Row(3, $height);
-			$this->Cell_DownText(0.80, $height, '$' . number_format($total_initial_investment, 2));
-			//$this->Cell_DownText(0.80, $height, '$' . number_format($total_utility_rebates + $total_local_rebates + $total_federal_rebates));
+
+			$this->Cell_RightText(1.78, $height, 'Available Incentives', 'R');
+			$this->Cell_RightText(0.82, $height, '$' . number_format($total_federal_rebates, 2));
+			
+			$this->Next_Row(1, $height);
+			$this->Cell_RightText(1.78, $height, 'Net Investment', 'R');
+			$this->Cell_RightText(0.82, $height, '$' . number_format($total_initial_investment, 2));
+
+			// Environmental Impact, Financial Summary, Net Invetment
 			
 			// turn border back off
 			$this->border = 0;
 
 			// environmental impact
 			$width = 0.65;
-			$this->Start_Table(2.00, 8.10);
+			$height = 0.28;
+			$this->Start_Table(2.30, 8.22);
 			$this->Set_FontAndColor('Helvetica', 8, 109, 193, 15);
 			$this->Cell_DownText($width, $height, number_format($total_co2_offset));
 			$this->Cell_DownText($width, $height, number_format($total_miles));
@@ -862,8 +845,8 @@
 
 			// financial summary
 			$width = 0.75;
-			$height = 0.18;
-			$this->Start_Table(4.65, 8.10);
+			$height = 0.30;
+			$this->Start_Table(4.80, 8.22);
 			$this->Set_FontAndColor('Helvetica', 8, 109, 193, 15);
 			$this->Cell_DownText($width, $height, '$' . number_format($total_current_annualCost - $total_hylite_annualCost, 2));
 			$this->Cell_DownText($width, $height, '$' . number_format($total_current_lifetimeCost - $total_hylite_lifetimeCost, 2));
@@ -873,7 +856,7 @@
 			//$this->Cell_DownText($width, $height, '$' . number_format(round($total_current_annualCost - $total_hylite_annualCost / 365, 2), 2));
 			
 			// net investment
-			$this->Start_Table(5.70, 8.10);
+			$this->Start_Table(5.92, 8.20);
 			$this->Set_FontAndColor('Helvetica', 18, 109, 193, 15);
 			$this->Cell_DownText(1.50, 0.55, '$' . number_format($total_initial_investment, 2));
 		}
@@ -897,93 +880,27 @@
 			$current->Load_Hylite();
 			$hylite->Load_Savings();
 			
-			if ($current->include_rebInc) {
-				$this->NewPage('pdf/05_section_investment.pdf');
-			}
-			else {
-				$this->NewPage('pdf/05_section.pdf');
-			}
-
-			// $this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
-			// $this->Move_Write(0, 0, '');
-			// $this->NextLine_WriteText($current->include_rebInc);
-			// $this->NextLine_WriteText($current->include_maint);
-			// $this->NextLine_WriteText($current->include_maint_ballast);
-
-			//Need to fit image into a 110x126 box (1.10w x 1.25h)
-			//But, really, we want to fit the image into a 1.00x1.15 shape
-
-			//$this->Set_FontAndColor('Helvetica', 12, 255, 0, 0);
-			//$this->Move_WriteText(0, 0.2, '');
-
-			// Also removing this code, as it's not needed for pictures anymore...
-			/*
-			$size = getimagesize($hylite->pic_url());
-			$orig_width = $size[0];
-			$orig_height = $size[1];
-			$x = 6.15;
-			$y = 2.40;
-			$desired_w = 1.18;
-			$desired_h = 1.35;
-			$width = 1.00;
-			$height = 1.00;
-			$wide = ($orig_width > $orig_height ? true : false);
-			$long = !$wide;
-			if ($wide) {
-				$width = $desired_w;
-				$height = ($orig_height * (($desired_w * 100) / $orig_width)) / 100;
-				if ($height > $desired_h)
-					$height = $desired_h;
-				$y += ($desired_h - $height) / 2;
-				$x += 0.05;
-			}
-			else if ($long) {
-				$height = $desired_h;
-				$width = ($orig_width * (($desired_h * 100) / $orig_height)) / 100;
-				if ($width > $desired_w)
-						$width = $desired_w;
-				$x += ($desired_w - $width) / 2;
-			}
-			*/
-
-			//$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
-			//$this->Start_Table(6.18, 2.40);
-			//$this->Cell_RightText(1.18, 1.35, "TEST1");
-			//$this->Cell_RightText(1.18, 1.35, "TEST2");
-
-			// $this->NextLine_WriteText('ow: ' . $orig_width);
-			// $this->NextLine_WriteText('oh: ' . $orig_height);
-			//$this->NextLine_WriteText('x: ' . $x);
-			//$this->NextLine_WriteText('y: ' . $y);
-			// $this->NextLine_WriteText('w: ' . $width);
-			// $this->NextLine_WriteText('h: ' .$height);
-			// $this->NextLine_WriteText('wide: ' . $wide);
-			// $this->NextLine_WriteText('long: ' . $long);
-		
-			// Removed placing image...
-			//$this->Image($hylite->pic_url(), $x, $y, $width, $height);
+			$this->NewPage('pdf/05_section.pdf');
 
 			// write text
-			$this->Set_FontAndColor('Helvetica', 18, 51, 102, 255);
-			$this->Move_WriteText(5.45, 0.80, 'Section ' . $this->fData->current_section);
+			$this->Set_FontAndColor('Helvetica', 16, 51, 102, 255);
+			$this->Move_WriteText(6.90, 1.05, 'Section ' . $this->fData->current_section);
 
 			$this->Set_FontAndColor('Helvetica', 16, 51, 102, 255);
-			$this->Move_Write(0.50, 1.50, 'section_name');
-			//$this->Start_Table(0.50, 1.25);
-			//$this->Cell_DownText(2.00, 0.50, 'Section Name', 'L');
+			$this->Move_Write(0.50, 1.75, 'section_name');
 			
 			// write current information
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
-			$this->Start_Table(3.05, 1.25);
-			$width = 1.28;
-			$height = 0.25;
+			$this->Start_Table(2.92, 1.60);
+			$width = 2.23;
+			$height = 0.37;
 			$this->Cell_Down($width, $height, 'section_current_fixture');
 			$this->Cell_Down($width, $height, 'section_current_lamp');
 			
-			$left = 2.89;
-			$this->Start_Table($left, 2.00);
-			$width = 1.59;
-			$height = 0.23;
+			$left = 2.92;
+			$this->Start_Table($left, 2.50);
+			$width = 2.23;
+			$height = 0.22;
 			$this->Cell_DownText($width, $height, $current->watts . 'W');
 			$this->Cell_DownText($width, $height, $current->lamps_per_fixture);
 			$this->Cell_DownText($width, $height, $current->lWatts . 'W');
@@ -992,7 +909,7 @@
 			$this->Cell_DownText($width, $height, $current->yearsOfOperation);
 			
 			// annual cost of ownership
-			$this->Start_Table($left, 3.60);
+			$this->Start_Table($left, 4.12);
 			$this->Cell_DownText($width, $height, number_format($current->annualUsageKwh));
 			$this->Cell_DownText($width, $height, '$' . number_format($current->annualElectricityCost, 2));
 			$this->Cell_DownText($width, $height, '$' . number_format($current->annualMaintCost, 2));
@@ -1002,7 +919,7 @@
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
 			
 			// total cost of ownership
-			$this->Start_Table($left, 4.75);
+			$this->Start_Table($left, 5.28);
 			$this->Cell_DownText($width, $height, number_format($current->lifetimeUsageKwh, 2));
 			$this->Cell_DownText($width, $height, '$' . number_format($current->lifetimeElectricityCost, 2));
 			$this->Cell_DownText($width, $height += 0.03, '$' . number_format($current->lifetimeMaintCost, 2));
@@ -1010,19 +927,19 @@
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0, 'B');
 			$this->Cell_DownText($width, $height, '$' . number_format($current->lifetimeCost, 2));
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
-
+			
 			// write hylite information
 			$this->Set_FontColor(109, 193, 15);
-			$this->Start_Table(4.55, 1.25);
-			$width = 1.28;
-			$height = 0.25;
+			$this->Start_Table(5.27, 1.60);
+			$width = 2.23;
+			$height = 0.37;
 			$this->Cell_DownText($width, $height, 'HyLite ' . ucwords($hylite->type));
 			$this->Cell_DownText($width, $height, $hylite->series);
 			
-			$left = 4.53;
-			$this->Start_Table($left, 2.00);
-			$width = 1.40;
-			$height = 0.23;
+			$left = 5.27;
+			$this->Start_Table($left, 2.50);
+			$width = 2.23;
+			$height = 0.22;
 			$this->Cell_DownText($width, $height, $hylite->watts . 'W');
 			$this->Cell_DownText($width, $height, $hylite->lamps_per_fixture);
 			$this->Cell_DownText($width, $height, round($hylite->lWatts, 0) . 'W');
@@ -1031,7 +948,7 @@
 			$this->Cell_DownText($width, $height, $hylite->yearsOfOperation);
 			
 			// annual cost of ownership
-			$this->Start_Table($left, 3.60);
+			$this->Start_Table($left, 4.12);
 			$this->Cell_DownText($width, $height, number_format($hylite->annualUsageKwh));
 			$this->Cell_DownText($width, $height, '$' . number_format($hylite->annualElectricityCost, 2));
 			$this->Cell_DownText($width, $height, '$0');
@@ -1041,7 +958,7 @@
 			$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15);
 			
 			// total cost of ownership
-			$this->Start_Table($left, 4.75);
+			$this->Start_Table($left, 5.28);
 			$this->Cell_DownText($width, $height, number_format($hylite->lifetimeUsageKwh));
 			$this->Cell_DownText($width, $height, '$' . number_format($hylite->lifetimeElectricityCost, 2));
 			$this->Cell_DownText($width, $height += 0.03, '$0');
@@ -1055,7 +972,7 @@
 			$height = 0.23;
 			$align = 'L';
 			$left = 0.52;
-			$down = 6.10;
+			$down = 6.80;
 			$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255);
 			$this->Start_Table($left, $down);
 			//$savings = $current->annualCost - $hylite->annualCost;
@@ -1081,10 +998,11 @@
 			$this->Cell_DownText($width, $height, '$' . round(floatval($hylite->savings) / floatval(365), 2), $align);
 			
 			// environmental impact
-			$width = 2.25;
-			$height = 0.21;
+			$width = 3.08;
+			$height = 0.29;
 			$align = 'L';
-			$down = 7.65;
+			$left = 2.00;
+			$down = 8.65;
 			$this->Set_FontColor(51, 102, 255);
 			$this->Start_Table($left, $down);
 			$this->Cell_DownText($width, $height, 'Total Pounds of CO2 Offset:', $align);
@@ -1097,18 +1015,10 @@
 			$width = 0.95;
 			$align = 'R';
 			$this->Set_FontColor(109, 193, 15);
-			/*
-			$usage = $current->lifetimeUsageKwh - $hylite->lifetimeUsageKwh;
-			$co2_offset = $usage * 1.44;
-			$trees = ($co2_offset / 2204.6) * 6;
-			$miles = $co2_offset / 0.936;
-			*/
+
 			$this->Cell_DownText($width, $height, number_format($hylite->co2_offset), $align);
 			$this->Cell_DownText($width, $height, number_format($hylite->trees), $align);
 			$this->Cell_DownText($width, $height, number_format($hylite->miles), $align);
-
-			//$initial_investment = ($hylite->price * $hylite->num_fixtures * $hylite->lamps_per_fixture);
-			//$net_investment = $initial_investment - $current->rebates_utilities - $current->rebates_state - $current->rebates_federal;
 			
 			if ($current->include_rebInc) {
 				// investment
@@ -1336,6 +1246,22 @@
 
 			$this->fData->use_sectionData = false;
 		}
+
+		function Page_SpecSheets() {
+			$this->fData->use_sectionData = true;
+			for ($i = 1; $i <= $this->num_sections; $i++) {
+				$this->fData->current_section = $i;
+				$hylite = new HyliteProduct();
+				$current = new SectionInfo();
+				$hylite->Load($this->fData, $this->data('section_hylite_sku'), $current);
+				$current->Load($this->fData, $hylite);
+				$hylite->Load_Current($this->fData);
+				$current->Load_Hylite();
+				$hylite->Load_Savings();				
+				$this->NewPage('pdf/' . $hylite->specSheetUrl);
+			}
+			$this->fData->use_sectionData = false;		
+		}
 		
 		function Page($page_num) {
 			
@@ -1396,6 +1322,11 @@
 				case 11:
 					$this->Page_Last();
 				break;
+
+				// Spec Sheets
+				case 12:
+					$this->Page_SpecSheets();
+				break;
 			}
 			
 			if ($debug)
@@ -1413,7 +1344,7 @@
 		$output = new ArvaPdf();
 		$output->Start();
 
-		for ($page = 1; $page <= 11; $page++) {
+		for ($page = 1; $page <= 12; $page++) {
 			if ($output->UsePage($page)) {
 				$output->Page($page);
 			}

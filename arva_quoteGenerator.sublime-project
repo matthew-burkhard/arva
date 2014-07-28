@@ -1,0 +1,10 @@
+{
+    "folders":
+    [
+        {
+            "path": "intranet",
+            "name": "Quote Generator",
+            "folder_exclude_patterns": ["bootstrap*", "fpd*"]
+        }
+    ]
+}
