@@ -11,7 +11,7 @@
 
 <head>
 
-    <title>ARVA - Quote Generator</title>
+    <title>ARVA | Proposal Generator</title>
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css">
@@ -41,7 +41,7 @@
         <form class="form-horizontal" role="form" id="data" name="data" method="post" action="generator.php" target="_blank">
 
             <div data-role="header">
-                <h1>Arva Proposal Generator<br/>v1.0.0</h1>
+                <h1>Arva<br />Proposal Generator<br/>v1.0.0</h1>
                 <center>
                     <input type="button" onclick="demo();" value="Demo">
                 </center>

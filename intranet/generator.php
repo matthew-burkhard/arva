@@ -276,7 +276,7 @@
 		
 		private $num_sections = 0;
 		private $debug = false;
-		private $border = 1;
+		private $border = 0;
 		//private $use_sectionData = false;
 		//private $current_section = 0;
 		
@@ -818,12 +818,13 @@
 			$this->Cell_RightText($col_width[9], $height, number_format($total_payback_months));
 
 			// Available Incentives
-			$this->Start_Table(3.68, 6.72);
+			$y = 6.72 - ((6 - $this->num_sections) * $height);
+			$this->Start_Table(3.68, $y);
 			$this->Set_FontColor(109, 193, 15);
 			$this->pdf->SetDrawColor(109, 193, 15);
 
 			$this->Cell_RightText(1.78, $height, 'Available Incentives', 'R');
-			$this->Cell_RightText(0.82, $height, '$' . number_format($total_federal_rebates, 2));
+			$this->Cell_RightText(0.82, $height, '$' . number_format($total_total_rebates, 2));
 			
 			$this->Next_Row(1, $height);
 			$this->Cell_RightText(1.78, $height, 'Net Investment', 'R');
@@ -872,6 +873,8 @@
 		
 		function Page_Section() {
 			
+			//$this->border = 1;
+
 			$hylite = new HyliteProduct();
 			$current = new SectionInfo();
 			$hylite->Load($this->fData, $this->data('section_hylite_sku'), $current);
@@ -883,8 +886,8 @@
 			$this->NewPage('pdf/05_section.pdf');
 
 			// write text
-			$this->Set_FontAndColor('Helvetica', 16, 51, 102, 255);
-			$this->Move_WriteText(6.90, 1.05, 'Section ' . $this->fData->current_section);
+			//$this->Set_FontAndColor('Helvetica', 16, 51, 102, 255);
+			//$this->Move_WriteText(6.90, 1.05, 'Section ' . $this->fData->current_section);
 
 			$this->Set_FontAndColor('Helvetica', 16, 51, 102, 255);
 			$this->Move_Write(0.50, 1.75, 'section_name');
@@ -915,7 +918,7 @@
 			$this->Cell_DownText($width, $height, '$' . number_format($current->annualMaintCost, 2));
 			//$current_annualCost = $current->annualElectricityCost + $current->annualMaintCost;
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0, 'B');
-			$this->Cell_DownText($width, $height, '$' . number_format($current->annualCost, 2));
+			$this->Cell_DownText($width, $height + 0.03, '$' . number_format($current->annualCost, 2));
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
 			
 			// total cost of ownership
@@ -969,9 +972,9 @@
 
 			// hylite savings information
 			$width = 2.25;
-			$height = 0.23;
+			$height = 0.29;
 			$align = 'L';
-			$left = 0.52;
+			$left = 0.55;
 			$down = 6.80;
 			$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255);
 			$this->Start_Table($left, $down);
@@ -987,7 +990,7 @@
 			// next row
 			$this->Start_Table($left, $down);
 			$this->Cell_RightText($width, $height, '');
-			$width = 0.95;
+			$width = 1.10;
 			$align = 'R';
 			$this->Set_FontColor(109, 193, 15);
 			$this->Cell_DownText($width, $height, '$' . number_format($hylite->savings, 2), $align);
@@ -998,7 +1001,7 @@
 			$this->Cell_DownText($width, $height, '$' . round(floatval($hylite->savings) / floatval(365), 2), $align);
 			
 			// environmental impact
-			$width = 3.08;
+			$width = 3.03;
 			$height = 0.29;
 			$align = 'L';
 			$left = 2.00;
@@ -1020,40 +1023,47 @@
 			$this->Cell_DownText($width, $height, number_format($hylite->trees), $align);
 			$this->Cell_DownText($width, $height, number_format($hylite->miles), $align);
 			
-			if ($current->include_rebInc) {
-				// investment
-				$width = 2.25;
-				$height = 0.23;
-				$align = 'L';
-				$left = 4.02;
-				$down = 6.08;
-				$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255);
-				$this->Start_Table($left, $down);
-				$this->Cell_DownText($width, $height, 'Initial Investment:', $align);
-				$this->Cell_DownText($width, $height, '   Utility Rebates:', $align);
-				$this->Cell_DownText($width, $height, '   Local & State:', $align);
-				$this->Cell_DownText($width, $height, '   Federal Incentives:', $align);
-				$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255, 'B');
-				$this->Cell_DownText($width, $height, 'Net Investment:', $align);
-				$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255);
-				
-				// next row
-				$this->Start_Table($left, $down);
-				$this->Cell_RightText($width, $height, '');
-				$width = 0.95;
-				$align = 'R';
-				$this->Set_FontColor(109, 193, 15);
-				$this->Cell_DownText($width, $height, '$' . number_format($hylite->initial_investment, 2), $align);
-				$this->Set_FontColor(255, 0, 0);
-				$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_utilities, 2), $align);
-				$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_state, 2), $align);
-				$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_federal, 2), $align);
-				$this->Set_FontColor(109, 193, 15);
-				$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15, 'B');
-				$this->Cell_DownText($width, $height, '$' . number_format($hylite->net_investment, 2), $align);
-				$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15);
-			}
+			// return on investment
+			$width = 2.35;
+			$height = 0.24;
+			$align = 'L';
+			$left = 4.10;
+			$down = 6.82;
+			$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255);
+			$this->Start_Table($left, $down);
+			$this->Cell_DownText($width, $height, 'Initial Investment:', $align);
+			//$this->Cell_DownText($width, $height, '   Utility Rebates:', $align);
+			//$this->Cell_DownText($width, $height, '   Local & State:', $align);
+			//$this->Cell_DownText($width, $height, '   Federal Incentives:', $align);
+			//$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255, 'B');
+			$this->Cell_DownText($width, $height, 'Net Investment:', $align);
+			$this->Cell_DownText($width, $height, 'Net Gain from Investment:', $align);
+			$this->Cell_DownText($width, $height, $yearOne . ' Year Return On Investment:', $align);
+			$this->Cell_DownText($width, $height, $yearTwo . ' Year Return On Investment:', $align);
+			$this->Cell_DownText($width, $height, 'Payback Period (Months):', $align);
+			$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255);
 			
+			// next row
+			$this->Start_Table($left, $down);
+			$this->Cell_RightText($width, $height, '');
+			$width = 1.00;
+			$align = 'R';
+			$this->Set_FontColor(109, 193, 15);
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->initial_investment, 2), $align);
+			//$this->Set_FontColor(255, 0, 0);
+			//$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_utilities, 2), $align);
+			//$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_state, 2), $align);
+			//$this->Cell_DownText($width, $height, '$' . number_format($current->rebates_federal, 2), $align);
+			$this->Set_FontColor(109, 193, 15);
+			//$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15, 'B');
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->net_investment, 2), $align);
+			$this->Cell_DownText($width, $height, '$' . number_format($hylite->total_savings - $hylite->net_investment, 2), $align);
+			$this->Cell_DownText($width, $height, number_format(100 * ((($yearOne * $hylite->savings) - $hylite->net_investment) / $hylite->net_investment)) . '%', $align);
+			$this->Cell_DownText($width, $height, number_format(100 * ((($yearTwo * $hylite->savings) - $hylite->net_investment) / $hylite->net_investment)) . '%', $align);				
+			$this->Cell_DownText($width, $height, $hylite->payback_months, $align);
+			//$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15);
+			
+			/*
 			if ($current->include_rebInc) {
 				$left = 4.02;
 				$down = 7.65;
@@ -1062,38 +1072,37 @@
 				$left = 4.10;
 				$down = 6.10;
 			}
+			*/
 
 			// return on investment
-			$width = 2.25;
-			$height = 0.21;
-			$align = 'L';
-			$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255);
-			$this->Start_Table($left, $down);
-			if (!$current->include_rebInc) {
-				$this->Cell_DownText($width, $height, 'Initial Investment:', $align);	
-			}
-			$this->Cell_DownText($width, $height, 'Total Savings with HyLite:', $align);
-			$this->Cell_DownText($width, $height, 'Net Gain from Investment:', $align);
-			$this->Cell_DownText($width, $height, $yearOne . ' Year Return On Investment:', $align);
-			$this->Cell_DownText($width, $height, $yearTwo . ' Year Return On Investment:', $align);
-			$this->Cell_DownText($width, $height, 'Total Return on Investment:', $align);
-			$this->Cell_DownText($width, $height, 'Payback Period (Months):', $align);
+			//$width = 2.25;
+			//$height = 0.21;
+			//$align = 'L';
+			//$this->Set_FontAndColor('Helvetica', 10, 51, 102, 255);
+			//$this->Start_Table($left, $down);
+			//if (!$current->include_rebInc) {
+			//	$this->Cell_DownText($width, $height, 'Initial Investment:', $align);	
+			//}
+			//$this->Cell_DownText($width, $height, 'Total Savings with HyLite:', $align);
+			
+
+			//$this->Cell_DownText($width, $height, 'Total Return on Investment:', $align);
+			
 			
 			// next row
-			$this->Start_Table($left, $down);
-			$this->Cell_RightText($width, $height, '');
-			$width = 0.95;
-			$align = 'R';
-			$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15, 'B');
-			if (!$current->include_rebInc) {
-				$this->Cell_DownText($width, $height, '$' . number_format($hylite->initial_investment), $align);
-			}
-			$this->Cell_DownText($width, $height, '$' . number_format($hylite->total_savings, 2), $align);
-			$this->Cell_DownText($width, $height, '$' . number_format($hylite->total_savings - $hylite->net_investment, 2), $align);
-			$this->Cell_DownText($width, $height, number_format(100 * ((($yearOne * $hylite->savings) - $hylite->net_investment) / $hylite->net_investment)) . '%', $align);
-			$this->Cell_DownText($width, $height, number_format(100 * ((($yearTwo * $hylite->savings) - $hylite->net_investment) / $hylite->net_investment)) . '%', $align);
-			$this->Cell_DownText($width, $height, number_format($hylite->total_roi) . '%', $align);
-			$this->Cell_DownText($width, $height, $hylite->payback_months, $align);
+			//$this->Start_Table($left, $down);
+			//$this->Cell_RightText($width, $height, '');
+			//$width = 0.95;
+			//$align = 'R';
+			//$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15, 'B');
+			//if (!$current->include_rebInc) {
+				//$this->Cell_DownText($width, $height, '$' . number_format($hylite->initial_investment), $align);
+			//}
+			//$this->Cell_DownText($width, $height, '$' . number_format($hylite->total_savings, 2), $align);
+			
+
+			//$this->Cell_DownText($width, $height, number_format($hylite->total_roi) . '%', $align);
+			
 		}
 		
 		function Page_Quote() {
