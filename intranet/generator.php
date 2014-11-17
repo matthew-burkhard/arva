@@ -1,8 +1,7 @@
 <?php // difference between this and require_once?
 	require('fpdf/fpdf.php');
 	require('fpdi/fpdi.php');
-	
-	class FormData {
+ class FormData {
 		public $use_sectionData = false;
 		public $current_section = 1;
 	
@@ -894,9 +893,9 @@
 			
 			// write current information
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
-			$this->Start_Table(2.92, 1.60);
+			$this->Start_Table(2.92, 1.95);
 			$width = 2.23;
-			$height = 0.37;
+			$height = 0.20;
 			$this->Cell_Down($width, $height, 'section_current_fixture');
 			$this->Cell_Down($width, $height, 'section_current_lamp');
 			
@@ -918,12 +917,14 @@
 			$this->Cell_DownText($width, $height, '$' . number_format($current->annualMaintCost, 2));
 			//$current_annualCost = $current->annualElectricityCost + $current->annualMaintCost;
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0, 'B');
+			$height = 0.31;
 			$this->Cell_DownText($width, $height + 0.03, '$' . number_format($current->annualCost, 2));
 			$this->Set_FontAndColor('Helvetica', 10, 255, 0, 0);
 			
+			$height = 0.22;
 			// total cost of ownership
 			$this->Start_Table($left, 5.28);
-			$this->Cell_DownText($width, $height, number_format($current->lifetimeUsageKwh, 2));
+			$this->Cell_DownText($width, $height, number_format($current->lifetimeUsageKwh));
 			$this->Cell_DownText($width, $height, '$' . number_format($current->lifetimeElectricityCost, 2));
 			$this->Cell_DownText($width, $height += 0.03, '$' . number_format($current->lifetimeMaintCost, 2));
 			//$current_lifetimeCost = $current_lifetimeElectricityCost + $current_lifetimeMaintCost;
@@ -933,9 +934,9 @@
 			
 			// write hylite information
 			$this->Set_FontColor(109, 193, 15);
-			$this->Start_Table(5.27, 1.60);
+			$this->Start_Table(5.27, 1.95);
 			$width = 2.23;
-			$height = 0.37;
+			$height = 0.20;
 			$this->Cell_DownText($width, $height, 'HyLite ' . ucwords($hylite->type));
 			$this->Cell_DownText($width, $height, $hylite->series);
 			
@@ -957,9 +958,11 @@
 			$this->Cell_DownText($width, $height, '$0');
 			//$hylite_annualCost = $hylite_annualElectricityCost;
 			$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15, 'B');
+			$height = 0.32;
 			$this->Cell_DownText($width, $height, '$' . number_format($hylite->annualCost, 2));
 			$this->Set_FontAndColor('Helvetica', 10, 109, 193, 15);
 			
+			$height = 0.22;
 			// total cost of ownership
 			$this->Start_Table($left, 5.28);
 			$this->Cell_DownText($width, $height, number_format($hylite->lifetimeUsageKwh));

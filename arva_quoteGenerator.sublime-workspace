@@ -159,7 +159,7 @@
 			"file": "intranet/input.php",
 			"settings":
 			{
-				"buffer_size": 13461,
+				"buffer_size": 13512,
 				"line_ending": "Windows"
 			}
 		},
@@ -415,15 +415,15 @@
 					"file": "intranet/input.php",
 					"settings":
 					{
-						"buffer_size": 13461,
+						"buffer_size": 13512,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								563,
-								563
+								1076,
+								1076
 							]
 						],
 						"settings":
@@ -433,7 +433,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 90.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -460,7 +460,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 154.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -477,8 +477,8 @@
 						"selection":
 						[
 							[
-								28806,
-								28806
+								236,
+								248
 							]
 						],
 						"settings":
@@ -487,7 +487,7 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 8658.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"

@@ -21,13 +21,13 @@
         var led_series = new Array();
 
          <?php
-         	$rs = mysqli_query($con, "select sku from products where type = 'led'");
+         	$rs = mysqli_query($con, "select sku from products where type = 'led' order by series, watts");
         	while ($row = mysqli_fetch_array($rs)) {
             	echo "led_series.push('".$row['sku']."');";
     	} ?>
         var induction_series = new Array(); 
         <?php
-         	$rs = mysqli_query($con, "select sku from products where type = 'induction'");
+         	$rs = mysqli_query($con, "select sku from products where type = 'induction' order by series, watts");
         	while ($row = mysqli_fetch_array($rs)) {
             	echo "induction_series.push('".$row['sku']."');";
         } ?>
@@ -41,9 +41,9 @@
         <form class="form-horizontal" role="form" id="data" name="data" method="post" action="generator.php" target="_blank">
 
             <div data-role="header">
-                <h1>Arva<br />Proposal Generator<br/>v1.0.0</h1>
+                <h3>Arva<br />Proposal Generator<br/>v1.0.0</h3>
                 <center>
-                    <input type="button" onclick="demo();" value="Demo">
+                    <!--input type="button" onclick="demo();" value="Demo"-->
                 </center>
             </div>
             <div data-role="main" class="ui-content">
